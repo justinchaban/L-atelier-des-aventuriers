@@ -39,7 +39,7 @@ jobs:
       - name: Build website
         run: npm run build
         env:
-          VITE_BASE_PATH: /atelier-des-aventuriers/
+          VITE_BASE_PATH: /L-atelier-des-aventuriers/
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
