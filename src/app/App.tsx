@@ -1,13 +1,13 @@
+
 import { useEffect, useState } from 'react';
 
+import CharacterBuilder from '../components/character/CharacterBuilder';
+import JoinCampaign from '../components/campaign/JoinCampaign';
 import DMSettings from '../components/library/DMSettings';
-import { books } from '../data/books';
-import {
-  abilityModifier,
-  proficiencyBonus
-} from '../engine/calculations';
 
-import type { Ability, Character } from '../models/Character';
+import { books } from '../data/books';
+
+import type { Character } from '../models/Character';
 import {
   createCampaign,
   type Campaign
@@ -18,109 +18,375 @@ import {
   saveCharacters
 } from '../services/storage';
 
-const abilities: { key: Ability; label: string }[] = [
-  {key:'str',label:'Force'},{key:'dex',label:'Dextérité'},{key:'con',label:'Constitution'},
-  {key:'int',label:'Intelligence'},{key:'wis',label:'Sagesse'},{key:'cha',label:'Charisme'}
-];
+// Création d'un personnage
 function newCharacter(): Character {
-  return {schemaVersion:1,id:crypto.randomUUID(),name:'Nouvel aventurier',level:1,speciesId:'',classId:'',backgroundId:'',
-    abilities:{str:8,dex:8,con:8,int:8,wis:8,cha:8},choices:{},
-    gameState:{currentHP:1,temporaryHP:0,usedHitDice:0,usedSpellSlots:{},conditions:[]}};
+  return {
+    schemaVersion: 1,
+    id: crypto.randomUUID(),
+    name: 'Nouvel aventurier',
+    level: 1,
+    speciesId: '',
+    classId: '',
+    backgroundId: '',
+
+    abilities: {
+      str: 8,
+      dex: 8,
+      con: 8,
+      int: 8,
+      wis: 8,
+      cha: 8
+    },
+
+    choices: {},
+
+    gameState: {
+      currentHP: 1,
+      temporaryHP: 0,
+      usedHitDice: 0,
+      usedSpellSlots: {},
+      conditions: []
+    }
+  };
 }
+
+// Vérification des données d'une campagne
+function isValidCampaign(value: unknown): value is Campaign {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+
+  const data = value as Record<string, unknown>;
+
+  return (
+    typeof data.id === 'string' &&
+    typeof data.name === 'string' &&
+    typeof data.createdAt === 'string' &&
+    Array.isArray(data.allowedBooks) &&
+    data.allowedBooks.every(
+      (id: unknown) =>
+        typeof id === 'string' &&
+        books.some(book => book.id === id)
+    )
+  );
+}
+
+// Chargement d'une campagne depuis le navigateur
+function loadCampaign(key: string): Campaign | null {
+  try {
+    const saved = localStorage.getItem(key);
+
+    if (!saved) {
+      return null;
+    }
+
+    const parsed: unknown = JSON.parse(saved);
+
+    if (isValidCampaign(parsed)) {
+      return parsed;
+    }
+  } catch {
+    // Stockage indisponible ou données invalides.
+  }
+
+  return null;
+}
+
 export default function App() {
-  const [characters,setCharacters] = useState<Character[]>(loadCharacters);
-  const [selectedId,setSelectedId] = useState<string|null>(null);
-  const [message,setMessage] = useState('');
-  const [campaign, setCampaign] = useState<Campaign>(() => {
-  try {
-    const saved = localStorage.getItem('atelier-campaign');
+  // Personnages
+  const [characters, setCharacters] = useState<Character[]>(
+    loadCharacters
+  );
 
-    if (saved) {
-      const parsed = JSON.parse(saved);
+  const [selectedId, setSelectedId] = useState<string | null>(
+    null
+  );
 
-      if (
-        parsed &&
-        typeof parsed.id === 'string' &&
-        typeof parsed.name === 'string' &&
-        Array.isArray(parsed.allowedBooks) &&
-        parsed.allowedBooks.every(
-          (id: unknown) =>
-            typeof id === 'string' &&
-            books.some(book => book.id === id)
-        ) &&
-        typeof parsed.createdAt === 'string'
-      ) {
-        return parsed as Campaign;
+  const [message, setMessage] = useState('');
+
+  // Navigation
+  const [activeSpace, setActiveSpace] = useState<
+    'player' | 'dm'
+  >('player');
+
+  // Campagne rejointe par le joueur
+  const [joinedCampaign, setJoinedCampaign] = useState<
+    Campaign | null
+  >(() => loadCampaign('atelier-joined-campaign'));
+
+  // Campagne configurée par le MJ
+  const [campaign, setCampaign] = useState<Campaign>(
+    () => loadCampaign('atelier-campaign') ?? createCampaign()
+  );
+
+  // Sauvegarde de la campagne joueur
+  useEffect(() => {
+    try {
+      if (joinedCampaign) {
+        localStorage.setItem(
+          'atelier-joined-campaign',
+          JSON.stringify(joinedCampaign)
+        );
+      } else {
+        localStorage.removeItem('atelier-joined-campaign');
       }
+    } catch {
+      setMessage(
+        'Impossible de sauvegarder la campagne rejointe.'
+      );
     }
-  } catch {
-    // Données absentes, invalides ou stockage indisponible.
+  }, [joinedCampaign]);
+
+  // Sauvegarde de la campagne MJ
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        'atelier-campaign',
+        JSON.stringify(campaign)
+      );
+    } catch {
+      setMessage(
+        'Impossible de sauvegarder la configuration MJ.'
+      );
+    }
+  }, [campaign]);
+
+  // Personnage actuellement sélectionné
+  const current = characters.find(
+    character => character.id === selectedId
+  );
+
+  // Sauvegarde des personnages
+  function update(next: Character[]) {
+    setCharacters(next);
+
+    if (!saveCharacters(next)) {
+      setMessage(
+        'Sauvegarde impossible : exportez vos données avant de quitter.'
+      );
+    } else {
+      setMessage('');
+    }
   }
 
-  return createCampaign();
-});
+  // Modification du personnage actuel
+  function patch(partial: Partial<Character>) {
+    if (!current) {
+      return;
+    }
 
-useEffect(() => {
-  try {
-    localStorage.setItem(
-      'atelier-campaign',
-      JSON.stringify(campaign)
+    update(
+      characters.map(character =>
+        character.id === current.id
+          ? { ...character, ...partial }
+          : character
+      )
     );
-  } catch {
-    // Le stockage peut être indisponible.
   }
-}, [campaign]);
-  const current = characters.find(c=>c.id===selectedId);
-  function update(next: Character[]) { setCharacters(next); if(!saveCharacters(next)) setMessage('Sauvegarde impossible : exportez vos données avant de quitter.'); }
-  function patch(partial: Partial<Character>) { if(current) update(characters.map(c=>c.id===current.id?{...c,...partial}:c)); }
-  function create() { const c=newCharacter(); update([...characters,c]); setSelectedId(c.id); }
+
+  // Nouveau personnage
+  function create() {
+    const character = newCharacter();
+
+    update([...characters, character]);
+    setSelectedId(character.id);
+  }
+
+  // Export des personnages
   function exportData() {
-    const blob=new Blob([JSON.stringify(characters,null,2)],{type:'application/json'});
-    const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url;a.download='mes-personnages.json';a.click();URL.revokeObjectURL(url);
+    const blob = new Blob(
+      [JSON.stringify(characters, null, 2)],
+      { type: 'application/json' }
+    );
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    link.href = url;
+    link.download = 'mes-personnages.json';
+    link.click();
+
+    URL.revokeObjectURL(url);
   }
-  return <div className="shell"><header className="top"><span className="crest">✦</span><div><small>DONJONS & DRAGONS · 2024 + COMPATIBILITÉ 2014</small><h1>L'Atelier des Aventuriers</h1></div></header>
-    
-<nav>
-  <button onClick={() => setSelectedId(null)}>
-    Mes personnages
-  </button>
 
-  <button
-    onClick={() =>
-      document.getElementById('dm-settings')?.scrollIntoView({
-        behavior: 'smooth'
-      })
-    }
-  >
-    Espace MJ
-  </button>
+  // Navigation entre les espaces
+  function navigate(space: 'player' | 'dm') {
+    setActiveSpace(space);
+    setSelectedId(null);
+  }
 
-  <button
-    onClick={() =>
-      document.getElementById('library')?.scrollIntoView({
-        behavior: 'smooth'
-      })
-    }
-  >
-    Bibliothèque
-  </button>
-</nav>
+  return (
+    <div className="shell">
+      {/* EN-TÊTE */}
+      <header className="top">
+        <span className="crest">✦</span>
 
-    <main>{message && <p role="alert" className="warning">{message}</p>}
-      {!current ? <section className="panel"><div className="section-title"><div><small>VOTRE CHRONIQUE</small><h2>Mes personnages</h2></div><button className="primary" onClick={create}>+ Nouveau personnage</button></div>
-        <p className="muted">Première version : identité, caractéristiques, sauvegarde et export. Les classes, règles détaillées et fiches jouables seront ajoutées par modules.</p>
-        <div className="cards">{characters.map(c=><button className="character-card" key={c.id} onClick={()=>setSelectedId(c.id)}><strong>{c.name}</strong><span>Niveau {c.level} · Fiche en préparation</span></button>)}</div>
-        <button onClick={exportData} disabled={!characters.length}>Exporter mes personnages (JSON)</button>
-      </section> : <section className="panel"><div className="section-title"><div><small>FICHE DE PERSONNAGE · PROTOTYPE</small><h2>{current.name}</h2></div><button onClick={()=>setSelectedId(null)}>← Retour</button></div>
-        <div className="fields"><label>Nom<input value={current.name} maxLength={80} onChange={e=>patch({name:e.target.value})}/></label><label>Niveau<input type="number" min="1" max="20" value={current.level} onChange={e=>{const n=Number(e.target.value);if(Number.isInteger(n)&&n>=1&&n<=20)patch({level:n});}}/></label></div>
-        <p className="muted">Bonus de maîtrise : +{proficiencyBonus(current.level)}. Les valeurs ci-dessous sont provisoires : le choix de méthode et les bonus d'historique arrivent ensuite.</p>
-        <div className="abilities">{abilities.map(({key,label})=><div className="ability" key={key}><span>{label}</span><strong>{abilityModifier(current.abilities[key])>=0?'+':''}{abilityModifier(current.abilities[key])}</strong><input aria-label={label} type="number" min="8" max="15" value={current.abilities[key]} onChange={e=>{const n=Number(e.target.value);if(Number.isInteger(n)&&n>=8&&n<=15)patch({abilities:{...current.abilities,[key]:n}});}}/><small>Base (8–15)</small></div>)}</div>
-        <p className="warning">Prototype : aucun contrôle de budget de 27 points pour l'instant. Ne pas utiliser comme validation finale d'une fiche.</p>
-      </section>}
-      <DMSettings
-  campaign={campaign}
-  onChange={setCampaign}
-/>
-      <section className="panel" id="library"><small>CATALOGUE</small><h2>Bibliothèque générale</h2><p className="muted">Ouvrages référencés. Aucun contenu propriétaire n'est intégré à ce stade.</p><div className="book-list">{books.map(b=><div key={b.id}><span>{b.name}</span><small>{b.ruleset} · {b.integrated?'Intégré':'À intégrer'}</small></div>)}</div></section>
-    </main><footer>Prototype 0.1 · Sauvegarde locale sur cet appareil · Projet non affilié à Wizards of the Coast</footer></div>;
+        <div>
+          <small>
+            DONJONS & DRAGONS · 2024 + COMPATIBILITÉ 2014
+          </small>
+
+          <h1>L'Atelier des Aventuriers</h1>
+        </div>
+      </header>
+
+      {/* NAVIGATION */}
+      <nav>
+        <button
+          type="button"
+          onClick={() => navigate('player')}
+        >
+          Espace Joueur
+        </button>
+
+        <button
+          type="button"
+          onClick={() => navigate('dm')}
+        >
+          Espace MJ
+        </button>
+
+        <button
+          type="button"
+          onClick={() =>
+            document.getElementById('library')?.scrollIntoView({
+              behavior: 'smooth'
+            })
+          }
+        >
+          Bibliothèque
+        </button>
+      </nav>
+
+      <main>
+        {/* MESSAGES */}
+        {message && (
+          <p role="alert" className="warning">
+            {message}
+          </p>
+        )}
+
+        {/* ESPACE JOUEUR */}
+        {activeSpace === 'player' && (
+          <>
+            <JoinCampaign
+              campaign={joinedCampaign}
+              onJoin={setJoinedCampaign}
+            />
+
+            {!current ? (
+              <section className="panel">
+                <div className="section-title">
+                  <div>
+                    <small>VOTRE CHRONIQUE</small>
+                    <h2>Mes personnages</h2>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="primary"
+                    onClick={create}
+                  >
+                    + Nouveau personnage
+                  </button>
+                </div>
+
+                <p className="muted">
+                  Crée tes personnages et retrouve-les
+                  à tout moment.
+                </p>
+
+                <div className="cards">
+                  {characters.map(character => (
+                    <button
+                      type="button"
+                      className="character-card"
+                      key={character.id}
+                      onClick={() =>
+                        setSelectedId(character.id)
+                      }
+                    >
+                      <strong>{character.name}</strong>
+
+                      <span>
+                        Niveau {character.level}
+                        {' · '}
+                        {character.speciesId ||
+                          'Espèce non définie'}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+
+                {characters.length === 0 && (
+                  <p className="muted">
+                    Aucun personnage pour le moment.
+                    Commence par créer ton premier aventurier !
+                  </p>
+                )}
+
+                <button
+                  type="button"
+                  onClick={exportData}
+                  disabled={!characters.length}
+                >
+                  Exporter mes personnages (JSON)
+                </button>
+              </section>
+            ) : (
+              <CharacterBuilder
+                character={current}
+                campaign={joinedCampaign}
+                onChange={patch}
+                onClose={() => setSelectedId(null)}
+              />
+            )}
+          </>
+        )}
+
+        {/* ESPACE MAÎTRE DU JEU */}
+        {activeSpace === 'dm' && (
+          <DMSettings
+            campaign={campaign}
+            onChange={setCampaign}
+          />
+        )}
+
+        {/* BIBLIOTHÈQUE */}
+        <section className="panel" id="library">
+          <small>CATALOGUE</small>
+
+          <h2>Bibliothèque générale</h2>
+
+          <p className="muted">
+            Ouvrages référencés pour la création
+            des personnages.
+          </p>
+
+          <div className="book-list">
+            {books.map(book => (
+              <div key={book.id}>
+                <span>{book.name}</span>
+
+                <small>
+                  {book.ruleset}
+                  {' · '}
+                  {book.integrated
+                    ? 'Intégré'
+                    : 'À intégrer'}
+                </small>
+              </div>
+            ))}
+          </div>
+        </section>
+      </main>
+
+      {/* PIED DE PAGE */}
+      <footer>
+        Prototype 0.1 · Sauvegarde locale sur cet appareil
+        {' · '}
+        Projet non affilié à Wizards of the Coast
+      </footer>
+    </div>
+  );
 }

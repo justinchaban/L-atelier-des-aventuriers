@@ -1,10 +1,9 @@
+
 import { useState } from 'react';
-import {
-  generateCampaignCode,
-  importCampaignCode
-} from '../../services/campaignCode';
+
 import { books } from '../../data/books';
 import type { Campaign } from '../../models/Campaign';
+import { generateCampaignCode } from '../../services/campaignCode';
 
 interface Props {
   campaign: Campaign;
@@ -15,6 +14,7 @@ export default function DMSettings({
   campaign,
   onChange
 }: Props) {
+  const [feedback, setFeedback] = useState('');
 
   function toggleBook(bookId: string) {
     const allowed = campaign.allowedBooks.includes(bookId);
@@ -27,51 +27,44 @@ export default function DMSettings({
       ...campaign,
       allowedBooks
     });
-  }
-  const [importCode, setImportCode] = useState('');
-const [feedback, setFeedback] = useState('');
 
-async function copyCampaignCode() {
-  try {
-    await navigator.clipboard.writeText(
-      generateCampaignCode(campaign)
-    );
-    setFeedback('Code copié dans le presse-papiers.');
-  } catch {
-    setFeedback('Copie impossible. Sélectionne le code manuellement.');
+    setFeedback('');
   }
-}
 
-function applyCampaignCode() {
-  try {
-    const imported = importCampaignCode(importCode);
-    onChange(imported);
-    setImportCode('');
-    setFeedback('Campagne importée avec succès.');
-  } catch (error) {
-    setFeedback(
-      error instanceof Error ? error.message : 'Code invalide.'
-    );
+  async function copyCampaignCode() {
+    try {
+      await navigator.clipboard.writeText(
+        generateCampaignCode(campaign)
+      );
+
+      setFeedback('Code copié dans le presse-papiers.');
+    } catch {
+      setFeedback(
+        'Copie impossible. Sélectionne le code manuellement.'
+      );
+    }
   }
-}
 
   return (
     <section className="panel" id="dm-settings">
-      <small>CONFIGURATION DU MAÎTRE DU JEU</small>
-      <h2>Livres autorisés</h2>
+      <small>ESPACE MAÎTRE DU JEU</small>
+      <h2>Configuration de campagne</h2>
 
       <label>
         Nom de la campagne
         <input
           value={campaign.name}
-          onChange={e =>
+          onChange={e => {
             onChange({
               ...campaign,
               name: e.target.value
-            })
-          }
+            });
+            setFeedback('');
+          }}
         />
       </label>
+
+      <h3>Livres autorisés</h3>
 
       <div className="book-list">
         {books.map(book => (
@@ -83,6 +76,7 @@ function applyCampaignCode() {
             />
 
             <span>{book.name}</span>
+
             <small>
               {book.ruleset}
               {' · '}
@@ -92,46 +86,27 @@ function applyCampaignCode() {
         ))}
       </div>
 
-<div className="campaign-sharing">
-  <h3>Partager la campagne</h3>
+      <div className="campaign-sharing">
+        <h3>Partager la campagne</h3>
 
-  <p className="muted">
-    Copie ce code pour transmettre les livres autorisés
-    à tes joueurs.
-  </p>
+        <p className="muted">
+          Transmets ce code à tes joueurs pour leur
+          communiquer les livres autorisés.
+        </p>
 
-  <textarea
-    aria-label="Code de campagne à partager"
-    readOnly
-    value={generateCampaignCode(campaign)}
-    rows={4}
-  />
+        <textarea
+          aria-label="Code de campagne à partager"
+          readOnly
+          value={generateCampaignCode(campaign)}
+          rows={4}
+        />
 
-  <button type="button" onClick={copyCampaignCode}>
-    Copier le code
-  </button>
+        <button type="button" onClick={copyCampaignCode}>
+          Copier le code
+        </button>
 
-  <h3>Importer une campagne</h3>
-
-  <textarea
-    aria-label="Code de campagne à importer"
-    placeholder="Colle ici le code transmis par ton MJ..."
-    value={importCode}
-    onChange={e => setImportCode(e.target.value)}
-    rows={4}
-  />
-
-  <button
-    type="button"
-    onClick={applyCampaignCode}
-    disabled={!importCode.trim()}
-  >
-    Importer le code
-  </button>
-
-  {feedback && <p role="status">{feedback}</p>}
-</div>
-
+        {feedback && <p role="status">{feedback}</p>}
+      </div>
     </section>
   );
 }
