@@ -1,8 +1,22 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+
+import DMSettings from '../components/library/DMSettings';
 import { books } from '../data/books';
-import { abilityModifier, proficiencyBonus } from '../engine/calculations';
+import {
+  abilityModifier,
+  proficiencyBonus
+} from '../engine/calculations';
+
 import type { Ability, Character } from '../models/Character';
-import { loadCharacters, saveCharacters } from '../services/storage';
+import {
+  createCampaign,
+  type Campaign
+} from '../models/Campaign';
+
+import {
+  loadCharacters,
+  saveCharacters
+} from '../services/storage';
 
 const abilities: { key: Ability; label: string }[] = [
   {key:'str',label:'Force'},{key:'dex',label:'Dextérité'},{key:'con',label:'Constitution'},
@@ -17,6 +31,45 @@ export default function App() {
   const [characters,setCharacters] = useState<Character[]>(loadCharacters);
   const [selectedId,setSelectedId] = useState<string|null>(null);
   const [message,setMessage] = useState('');
+  const [campaign, setCampaign] = useState<Campaign>(() => {
+  try {
+    const saved = localStorage.getItem('atelier-campaign');
+
+    if (saved) {
+      const parsed = JSON.parse(saved);
+
+      if (
+        parsed &&
+        typeof parsed.id === 'string' &&
+        typeof parsed.name === 'string' &&
+        Array.isArray(parsed.allowedBooks) &&
+        parsed.allowedBooks.every(
+          (id: unknown) =>
+            typeof id === 'string' &&
+            books.some(book => book.id === id)
+        ) &&
+        typeof parsed.createdAt === 'string'
+      ) {
+        return parsed as Campaign;
+      }
+    }
+  } catch {
+    // Données absentes, invalides ou stockage indisponible.
+  }
+
+  return createCampaign();
+});
+
+useEffect(() => {
+  try {
+    localStorage.setItem(
+      'atelier-campaign',
+      JSON.stringify(campaign)
+    );
+  } catch {
+    // Le stockage peut être indisponible.
+  }
+}, [campaign]);
   const current = characters.find(c=>c.id===selectedId);
   function update(next: Character[]) { setCharacters(next); if(!saveCharacters(next)) setMessage('Sauvegarde impossible : exportez vos données avant de quitter.'); }
   function patch(partial: Partial<Character>) { if(current) update(characters.map(c=>c.id===current.id?{...c,...partial}:c)); }
@@ -26,7 +79,33 @@ export default function App() {
     const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url;a.download='mes-personnages.json';a.click();URL.revokeObjectURL(url);
   }
   return <div className="shell"><header className="top"><span className="crest">✦</span><div><small>DONJONS & DRAGONS · 2024 + COMPATIBILITÉ 2014</small><h1>L'Atelier des Aventuriers</h1></div></header>
-    <nav><button onClick={()=>setSelectedId(null)}>Mes personnages</button><button onClick={()=>document.getElementById('library')?.scrollIntoView({behavior:'smooth'})}>Bibliothèque</button></nav>
+    
+<nav>
+  <button onClick={() => setSelectedId(null)}>
+    Mes personnages
+  </button>
+
+  <button
+    onClick={() =>
+      document.getElementById('dm-settings')?.scrollIntoView({
+        behavior: 'smooth'
+      })
+    }
+  >
+    Espace MJ
+  </button>
+
+  <button
+    onClick={() =>
+      document.getElementById('library')?.scrollIntoView({
+        behavior: 'smooth'
+      })
+    }
+  >
+    Bibliothèque
+  </button>
+</nav>
+
     <main>{message && <p role="alert" className="warning">{message}</p>}
       {!current ? <section className="panel"><div className="section-title"><div><small>VOTRE CHRONIQUE</small><h2>Mes personnages</h2></div><button className="primary" onClick={create}>+ Nouveau personnage</button></div>
         <p className="muted">Première version : identité, caractéristiques, sauvegarde et export. Les classes, règles détaillées et fiches jouables seront ajoutées par modules.</p>
@@ -38,6 +117,10 @@ export default function App() {
         <div className="abilities">{abilities.map(({key,label})=><div className="ability" key={key}><span>{label}</span><strong>{abilityModifier(current.abilities[key])>=0?'+':''}{abilityModifier(current.abilities[key])}</strong><input aria-label={label} type="number" min="8" max="15" value={current.abilities[key]} onChange={e=>{const n=Number(e.target.value);if(Number.isInteger(n)&&n>=8&&n<=15)patch({abilities:{...current.abilities,[key]:n}});}}/><small>Base (8–15)</small></div>)}</div>
         <p className="warning">Prototype : aucun contrôle de budget de 27 points pour l'instant. Ne pas utiliser comme validation finale d'une fiche.</p>
       </section>}
+      <DMSettings
+  campaign={campaign}
+  onChange={setCampaign}
+/>
       <section className="panel" id="library"><small>CATALOGUE</small><h2>Bibliothèque générale</h2><p className="muted">Ouvrages référencés. Aucun contenu propriétaire n'est intégré à ce stade.</p><div className="book-list">{books.map(b=><div key={b.id}><span>{b.name}</span><small>{b.ruleset} · {b.integrated?'Intégré':'À intégrer'}</small></div>)}</div></section>
     </main><footer>Prototype 0.1 · Sauvegarde locale sur cet appareil · Projet non affilié à Wizards of the Coast</footer></div>;
 }
