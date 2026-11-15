@@ -22,7 +22,7 @@ import {
   POINT_BUY_BUDGET,
   getPointBuyTotal,
   getPointBuyCost,
-  rollAbilityScores,
+  rollAbilityDiceSet,
   type AbilityGenerationMethod
 } from '../../engine/abilityGeneration';
 
@@ -34,7 +34,8 @@ interface Props {
   onMethodChange: (method: AbilityGenerationMethod) => void;
   onRollChange: (
     scores: number[],
-    assignments: string[]
+    assignments: string[],
+    diceDetails: string[]
   ) => void;
   onRollAssignmentChange: (
     assignments: string[],
@@ -50,6 +51,10 @@ const EMPTY_ABILITIES: AbilityScores = {
   wis: 0,
   cha: 0
 };
+
+const EMPTY_ASSIGNMENTS = [
+  '', '', '', '', '', ''
+];
 
 export default function AbilityScoreSelector({
   character,
@@ -98,8 +103,6 @@ export default function AbilityScoreSelector({
   const pointBuyRemaining =
     POINT_BUY_BUDGET - pointBuyTotal;
 
-  // Les six résultats sont enregistrés dans choices
-  // sous forme de chaînes de caractères.
   const savedRolls = character.choices.abilityRolls;
 
   const rollScores =
@@ -113,11 +116,6 @@ export default function AbilityScoreSelector({
       ? savedRolls.map(Number)
       : [];
 
-  // Chaque position correspond à une caractéristique
-  // dans l'ordre FOR, DEX, CON, INT, SAG, CHA.
-  //
-  // La valeur stockée est l'index du jet utilisé,
-  // ou une chaîne vide si rien n'est attribué.
   const savedAssignments =
     character.choices.abilityRollAssignments;
 
@@ -125,7 +123,32 @@ export default function AbilityScoreSelector({
     Array.isArray(savedAssignments) &&
     savedAssignments.length === 6
       ? savedAssignments
-      : ['', '', '', '', '', ''];
+      : EMPTY_ASSIGNMENTS;
+
+  const savedDiceDetails =
+    character.choices.abilityRollDice;
+
+  const diceDetails =
+    Array.isArray(savedDiceDetails) &&
+    savedDiceDetails.length === 6
+      ? savedDiceDetails.map(value => {
+          const dice = value.split(',').map(Number);
+
+          if (
+            dice.length !== 4 ||
+            dice.some(
+              die =>
+                !Number.isInteger(die) ||
+                die < 1 ||
+                die > 6
+            )
+          ) {
+            return [];
+          }
+
+          return dice;
+        })
+      : [];
 
   const usedRollIndices = rollAssignments
     .filter(value => value !== '')
@@ -157,11 +180,9 @@ export default function AbilityScoreSelector({
   function handleMethodChange(
     nextMethod: AbilityGenerationMethod
   ) {
-    if (nextMethod === method) {
-      return;
+    if (nextMethod !== method) {
+      onMethodChange(nextMethod);
     }
-
-    onMethodChange(nextMethod);
   }
 
   function handleStandardScoreChange(
@@ -221,13 +242,20 @@ export default function AbilityScoreSelector({
   }
 
   function handleRollGeneration() {
-    const scores = rollAbilityScores();
+    const rolls = rollAbilityDiceSet();
 
-    // Une nouvelle série de jets efface
-    // toutes les anciennes attributions.
+    const scores = rolls.map(
+      roll => roll.total
+    );
+
+    const details = rolls.map(
+      roll => roll.dice.join(',')
+    );
+
     onRollChange(
       scores,
-      ['', '', '', '', '', '']
+      [...EMPTY_ASSIGNMENTS],
+      details
     );
   }
 
@@ -343,9 +371,9 @@ export default function AbilityScoreSelector({
           <h4>Génération par jets de dés</h4>
 
           <p className="muted">
-            Lancez quatre dés à six faces pour chaque
-            caractéristique. Le dé le plus faible est
-            retiré du résultat.
+            Lancez quatre dés à six faces.
+            Le plus faible est écarté et
+            les trois autres sont additionnés.
           </p>
 
           <button
@@ -360,35 +388,95 @@ export default function AbilityScoreSelector({
           {rollScores.length === 6 && (
             <>
               <p>
-                Résultats obtenus :
+                <strong>
+                  {assignedRollCount} / 6
+                </strong>
+                {' '}résultats attribués.
               </p>
 
               <div className="ability-score-grid">
-                {rollScores.map((score, index) => (
-                  <div
-                    key={index}
-                    className="ability-score-card"
-                  >
-                    <div className="ability-score-header">
-                      <h4>Jet {index + 1}</h4>
+                {rollScores.map((score, index) => {
+                  const dice = diceDetails[index] ?? [];
 
-                      <span className="ability-score-final">
-                        {score}
-                      </span>
+                  const lowest =
+                    dice.length === 4
+                      ? Math.min(...dice)
+                      : null;
+
+                  const droppedIndex =
+                    lowest !== null
+                      ? dice.indexOf(lowest)
+                      : -1;
+
+                  const isUsed =
+                    usedRollIndices.includes(index);
+
+                  return (
+                    <div
+                      key={index}
+                      className="ability-score-card"
+                    >
+                      <div className="ability-score-header">
+                        <h4>Jet {index + 1}</h4>
+
+                        <span className="ability-score-final">
+                          {score}
+                        </span>
+                      </div>
+
+                      {dice.length === 4 && (
+                        <div
+                          style={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            gap: '8px',
+                            margin: '12px 0'
+                          }}
+                        >
+                          {dice.map((die, dieIndex) => {
+                            const dropped =
+                              dieIndex === droppedIndex;
+
+                            return (
+                              <span
+                                key={dieIndex}
+                                title={
+                                  dropped
+                                    ? 'Dé écarté'
+                                    : 'Dé conservé'
+                                }
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  width: '38px',
+                                  height: '38px',
+                                  borderRadius: '8px',
+                                  border: '1px solid currentColor',
+                                  opacity: dropped ? 0.4 : 1,
+                                  textDecoration: dropped
+                                    ? 'line-through'
+                                    : 'none',
+                                  fontWeight: 700,
+                                  fontSize: '18px'
+                                }}
+                              >
+                                {die}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      <p className="muted">
+                        {isUsed
+                          ? '✓ Attribué'
+                          : 'Disponible'}
+                      </p>
                     </div>
-
-                    <p className="muted">
-                      {usedRollIndices.includes(index)
-                        ? '✓ Attribué'
-                        : 'Disponible'}
-                    </p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
-
-              <p className="muted">
-                {assignedRollCount} / 6 résultats attribués.
-              </p>
             </>
           )}
         </div>
@@ -597,10 +685,10 @@ export default function AbilityScoreSelector({
 
       {method === 'roll' && (
         <p className="muted">
-          Chaque résultat ne peut être attribué
-          qu'une seule fois, même si plusieurs jets
-          ont obtenu la même valeur. Vous pouvez
-          relancer toute la série de six scores.
+          Chaque jet peut être attribué une seule fois.
+          Les résultats identiques restent indépendants.
+          Relancer les dés efface les attributions
+          précédentes.
         </p>
       )}
     </section>

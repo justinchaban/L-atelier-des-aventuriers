@@ -204,6 +204,7 @@ export default function CharacterBuilder({
       updatedChoices.abilityRolls = [];
       updatedChoices.abilityRollAssignments =
         [...EMPTY_ROLL_ASSIGNMENTS];
+      updatedChoices.abilityRollDice = [];
     }
 
     onChange({
@@ -223,10 +224,12 @@ export default function CharacterBuilder({
 
   function handleRollChange(
     scores: number[],
-    assignments: string[]
+    assignments: string[],
+    diceDetails: string[]
   ) {
     if (
       scores.length !== 6 ||
+      diceDetails.length !== 6 ||
       !scores.every(score =>
         Number.isInteger(score) &&
         score >= 3 &&
@@ -241,7 +244,8 @@ export default function CharacterBuilder({
       choices: {
         ...character.choices,
         abilityRolls: scores.map(String),
-        abilityRollAssignments: assignments
+        abilityRollAssignments: assignments,
+        abilityRollDice: diceDetails
       }
     });
   }

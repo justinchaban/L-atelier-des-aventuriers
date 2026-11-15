@@ -10,7 +10,9 @@ export type AbilityGenerationMethod =
   | 'point-buy'
   | 'roll';
 
-export const STANDARD_ARRAY = [15, 14, 13, 12, 10, 8];
+export const STANDARD_ARRAY = [
+  15, 14, 13, 12, 10, 8
+];
 
 export const POINT_BUY_BUDGET = 27;
 
@@ -25,7 +27,15 @@ export const POINT_BUY_COSTS: Record<number, number> = {
   15: 9
 };
 
-export function getPointBuyCost(score: number): number {
+export interface AbilityDiceRoll {
+  dice: number[];
+  droppedIndex: number;
+  total: number;
+}
+
+export function getPointBuyCost(
+  score: number
+): number {
   return POINT_BUY_COSTS[score] ?? -1;
 }
 
@@ -52,7 +62,10 @@ export function isValidPointBuy(
 ): boolean {
   const total = getPointBuyTotal(scores);
 
-  return total >= 0 && total <= POINT_BUY_BUDGET;
+  return (
+    total >= 0 &&
+    total <= POINT_BUY_BUDGET
+  );
 }
 
 export function isValidStandardArray(
@@ -71,21 +84,44 @@ export function isValidStandardArray(
   );
 }
 
-export function rollAbilityScore(): number {
-  const rolls = Array.from(
+export function rollAbilityDice(): AbilityDiceRoll {
+  const dice = Array.from(
     { length: 4 },
     () => Math.floor(Math.random() * 6) + 1
   );
 
-  rolls.sort((a, b) => b - a);
+  const lowest = Math.min(...dice);
+  const droppedIndex = dice.indexOf(lowest);
 
-  return rolls[0] + rolls[1] + rolls[2];
+  const total = dice.reduce(
+    (sum, value, index) =>
+      index === droppedIndex
+        ? sum
+        : sum + value,
+    0
+  );
+
+  return {
+    dice,
+    droppedIndex,
+    total
+  };
+}
+
+export function rollAbilityDiceSet(): AbilityDiceRoll[] {
+  return Array.from(
+    { length: 6 },
+    () => rollAbilityDice()
+  );
+}
+
+export function rollAbilityScore(): number {
+  return rollAbilityDice().total;
 }
 
 export function rollAbilityScores(): number[] {
-  return Array.from(
-    { length: 6 },
-    () => rollAbilityScore()
+  return rollAbilityDiceSet().map(
+    roll => roll.total
   );
 }
 
