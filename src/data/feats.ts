@@ -8,7 +8,7 @@ export const feats: Feat[] = [
     description:
       "Améliore l'initiative et permet d'échanger son initiative avec celle d'un allié consentant.",
     category: 'origin',
-    bookId: 'srd-5.2.1',
+    bookId: 'XSRD',
     ruleset: '2024'
   },
   {
@@ -17,7 +17,7 @@ export const feats: Feat[] = [
     description:
       'Accorde des points de chance permettant d’influencer certains jets.',
     category: 'origin',
-    bookId: 'srd-5.2.1',
+    bookId: 'XSRD',
     ruleset: '2024'
   },
   {
@@ -26,7 +26,7 @@ export const feats: Feat[] = [
     description:
       'Augmente les points de vie maximum du personnage.',
     category: 'origin',
-    bookId: 'srd-5.2.1',
+    bookId: 'XSRD',
     ruleset: '2024'
   },
   {
@@ -35,7 +35,7 @@ export const feats: Feat[] = [
     description:
       'Améliore certaines capacités physiques et la mobilité.',
     category: 'general',
-    bookId: 'srd-5.2.1',
+    bookId: 'XSRD',
     ruleset: '2024',
     prerequisites: {
       minimumLevel: 4
@@ -52,7 +52,7 @@ export const feats: Feat[] = [
     description:
       'Permet d’améliorer les dégâts infligés avec une arme.',
     category: 'origin',
-    bookId: 'srd-5.2.1',
+    bookId: 'XSRD',
     ruleset: '2024'
   }
 ];

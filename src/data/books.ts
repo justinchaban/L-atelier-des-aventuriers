@@ -117,7 +117,7 @@ export const books: Book[] = [
   // ========================================
 
   {
-    id: 'FRHoF',
+    id: 'FRHOF',
     name: 'Forgotten Realms: Heroes of Faerûn',
     ruleset: '2024',
     category: 'supplement',
@@ -152,8 +152,10 @@ export function normalizeBookId(
 ): string {
   const trimmed = id.trim();
 
-  const legacyId =
-    legacyBookIds[trimmed.toLowerCase()];
+  const key = trimmed.toLowerCase();
+  const legacyId = Object.hasOwn(legacyBookIds, key)
+    ? legacyBookIds[key]
+    : undefined;
 
   if (legacyId) {
     return legacyId;
@@ -165,6 +167,11 @@ export function normalizeBookId(
 // ==========================================
 // RECHERCHE
 // ==========================================
+
+/** Normalise sans consulter le catalogue : autorisation et disponibilité sont distinctes. */
+export function normalizeBookIds(ids: readonly string[]): string[] {
+  return [...new Set(ids.map(normalizeBookId).filter(Boolean))];
+}
 
 export function getBookById(
   id: string

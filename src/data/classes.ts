@@ -7,7 +7,7 @@ export const classes: CharacterClass[] = [
     name: 'Barbare',
     description:
       'Un combattant féroce qui puise sa puissance dans sa rage.',
-    bookId: 'srd-5.2.1',
+    bookId: 'XSRD',
     ruleset: '2024',
     hitDie: 12,
     primaryAbilities: ['str'],
@@ -42,7 +42,7 @@ export const classes: CharacterClass[] = [
     name: 'Barde',
     description:
       'Un artiste et lanceur de sorts dont la magie inspire ses alliés.',
-    bookId: 'srd-5.2.1',
+    bookId: 'XSRD',
     ruleset: '2024',
     hitDie: 8,
     primaryAbilities: ['cha'],
@@ -91,7 +91,7 @@ export const classes: CharacterClass[] = [
     name: 'Clerc',
     description:
       'Un serviteur des puissances divines qui manie la magie sacrée.',
-    bookId: 'srd-5.2.1',
+    bookId: 'XSRD',
     ruleset: '2024',
     hitDie: 8,
     primaryAbilities: ['wis'],
@@ -116,7 +116,7 @@ export const classes: CharacterClass[] = [
     name: 'Druide',
     description:
       'Un protecteur de la nature maîtrisant les forces primordiales.',
-    bookId: 'srd-5.2.1',
+    bookId: 'XSRD',
     ruleset: '2024',
     hitDie: 8,
     primaryAbilities: ['wis'],
@@ -141,7 +141,7 @@ export const classes: CharacterClass[] = [
     name: 'Guerrier',
     description:
       'Un maître des armes et des techniques de combat.',
-    bookId: 'srd-5.2.1',
+    bookId: 'XSRD',
     ruleset: '2024',
     hitDie: 10,
     primaryAbilities: ['str', 'dex'],
@@ -339,7 +339,7 @@ features: [
         description:
           'Un guerrier qui perfectionne ses aptitudes physiques et sa maîtrise du combat pour devenir un combattant d’exception.',
 
-        bookId: 'srd-5.2.1',
+        bookId: 'XSRD',
         ruleset: '2024',
 
         features: [
@@ -393,7 +393,7 @@ features: [
         name: 'Maître de bataille',
         description:
           'Un guerrier qui maîtrise des manœuvres tactiques pour prendre l’avantage au combat.',
-        bookId: 'srd-5.2.1',
+        bookId: 'XSRD',
         ruleset: '2024',
 
         features: [
@@ -577,7 +577,7 @@ features: [
     name: 'Moine',
     description:
       'Un combattant discipliné utilisant son énergie intérieure.',
-    bookId: 'srd-5.2.1',
+    bookId: 'XSRD',
     ruleset: '2024',
     hitDie: 8,
     primaryAbilities: ['dex', 'wis'],
@@ -595,7 +595,7 @@ features: [
     name: 'Paladin',
     description:
       'Un champion animé par un serment et une puissance divine.',
-    bookId: 'srd-5.2.1',
+    bookId: 'XSRD',
     ruleset: '2024',
     hitDie: 10,
     primaryAbilities: ['str', 'cha'],
@@ -622,7 +622,7 @@ features: [
     name: 'Rôdeur',
     description:
       'Un explorateur et chasseur habitué aux terres sauvages.',
-    bookId: 'srd-5.2.1',
+    bookId: 'XSRD',
     ruleset: '2024',
     hitDie: 10,
     primaryAbilities: ['dex', 'wis'],
@@ -648,7 +648,7 @@ features: [
     name: 'Roublard',
     description:
       'Un expert de la discrétion, de la précision et des compétences.',
-    bookId: 'srd-5.2.1',
+    bookId: 'XSRD',
     ruleset: '2024',
     hitDie: 8,
     primaryAbilities: ['dex'],
@@ -667,7 +667,7 @@ features: [
     name: 'Ensorceleur',
     description:
       'Un lanceur de sorts dont la magie provient de son essence.',
-    bookId: 'srd-5.2.1',
+    bookId: 'XSRD',
     ruleset: '2024',
     hitDie: 6,
     primaryAbilities: ['cha'],
@@ -689,7 +689,7 @@ features: [
     name: 'Occultiste',
     description:
       'Un pratiquant de la magie ayant conclu un pacte surnaturel.',
-    bookId: 'srd-5.2.1',
+    bookId: 'XSRD',
     ruleset: '2024',
     hitDie: 8,
     primaryAbilities: ['cha'],
@@ -712,7 +712,7 @@ features: [
     name: 'Magicien',
     description:
       'Un érudit étudiant les secrets de la magie arcanique.',
-    bookId: 'srd-5.2.1',
+    bookId: 'XSRD',
     ruleset: '2024',
     hitDie: 6,
     primaryAbilities: ['int'],

@@ -1,3 +1,4 @@
+import { normalizeBookId } from '../data/books';
 
 import type {
   ContentCategory,
@@ -122,7 +123,7 @@ function getString(
 function normalizeSource(
   value: string
 ): string {
-  return value.trim().toUpperCase();
+  return normalizeBookId(value);
 }
 
 // ==========================================
@@ -158,6 +159,13 @@ export function detectContent(
 // ==========================================
 // EXTRACTION DE LA SOURCE
 // ==========================================
+
+/** Code tel que fourni par le contenu, avant normalisation interne. */
+export function getOriginalEntrySource(entry: JsonRecord): string | null {
+  return typeof entry.source === 'string' && entry.source.trim() !== ''
+    ? entry.source
+    : null;
+}
 
 export function getEntrySource(
   entry: JsonRecord

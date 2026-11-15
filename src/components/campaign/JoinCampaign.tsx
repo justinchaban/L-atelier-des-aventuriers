@@ -3,7 +3,7 @@ import { useState } from 'react';
 
 import type { Campaign } from '../../models/Campaign';
 import { importCampaignCode } from '../../services/campaignCode';
-import { books } from '../../data/books';
+import { getBookById } from '../../data/books';
 
 interface Props {
   campaign: Campaign | null;
@@ -71,7 +71,7 @@ export default function JoinCampaign({
 
           <ul>
             {campaign.allowedBooks.map(id => {
-              const book = books.find(b => b.id === id);
+              const book = getBookById(id);
 
               return (
                 <li key={id}>

@@ -1,5 +1,5 @@
 
-import { books } from '../data/books';
+import { normalizeBookIds } from '../data/books';
 import type { Campaign } from '../models/Campaign';
 
 const PREFIX = 'LADA1:';
@@ -8,7 +8,7 @@ export function generateCampaignCode(campaign: Campaign): string {
   const data = {
     version: 1,
     name: campaign.name,
-    allowedBooks: campaign.allowedBooks
+    allowedBooks: normalizeBookIds(campaign.allowedBooks)
   };
 
   const bytes = new TextEncoder().encode(JSON.stringify(data));
@@ -44,8 +44,7 @@ export function importCampaignCode(code: string): Campaign {
       !Array.isArray(value.allowedBooks) ||
       !value.allowedBooks.every(
         (id: unknown) =>
-          typeof id === 'string' &&
-          books.some(book => book.id === id)
+          typeof id === 'string' && id.trim().length > 0
       )
     ) {
       throw new Error('Paramètres de campagne invalides.');
@@ -54,7 +53,7 @@ export function importCampaignCode(code: string): Campaign {
     return {
       id: crypto.randomUUID(),
       name: value.name,
-      allowedBooks: value.allowedBooks as string[],
+      allowedBooks: normalizeBookIds(value.allowedBooks as string[]),
       createdAt: new Date().toISOString()
     };
   } catch {

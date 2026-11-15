@@ -10,7 +10,7 @@ export function createCampaign(): Campaign {
   return {
     id: crypto.randomUUID(),
     name: 'Nouvelle campagne',
-    allowedBooks: ['srd-5.2.1'],
+    allowedBooks: ['XSRD'],
     createdAt: new Date().toISOString()
   };
 }

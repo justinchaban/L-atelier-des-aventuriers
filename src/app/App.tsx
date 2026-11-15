@@ -8,7 +8,7 @@ import ContentImportPanel from '../components/content/ContentImportPanel';
 
 import {
   books,
-  normalizeBookId
+  normalizeBookIds
 } from '../data/books';
 
 import type { Character } from '../models/Character';
@@ -98,15 +98,7 @@ function isValidCampaign(
 function migrateCampaignBooks(
   campaign: Campaign
 ): Campaign {
-  const allowedBooks = [
-    ...new Set(
-      campaign.allowedBooks
-        .map(normalizeBookId)
-        .filter(id =>
-          books.some(book => book.id === id)
-        )
-    )
-  ];
+  const allowedBooks = normalizeBookIds(campaign.allowedBooks);
 
   return {
     ...campaign,

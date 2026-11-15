@@ -92,7 +92,7 @@ export default function CharacterBuilder({
   const [step, setStep] = useState(0);
 
   const allowedBooks =
-    campaign?.allowedBooks ?? ['srd-5.2.1'];
+    campaign?.allowedBooks ?? ['XSRD'];
 
   const selectedSubclassId =
     typeof character.choices.subclassId === 'string'

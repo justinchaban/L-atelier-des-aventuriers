@@ -1,3 +1,4 @@
+import { isBookAllowed } from './restrictions';
 import { weapons } from '../data/weapons';
 
 export function getWeaponMasteryCount(
@@ -35,7 +36,7 @@ export function validateWeaponMasteries(
   const availableIds = new Set(
     weapons
       .filter(weapon =>
-        allowedBooks.includes(weapon.bookId)
+        isBookAllowed(weapon.bookId, allowedBooks)
       )
       .map(weapon => weapon.id)
   );

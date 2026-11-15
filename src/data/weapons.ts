@@ -11,7 +11,7 @@ export const weapons: Weapon[] = [
     damageType: 'piercing',
     properties: ['finesse', 'light', 'thrown'],
     mastery: 'nick',
-    bookId: 'srd-5.2.1'
+    bookId: 'XSRD'
   },
   {
     id: 'club',
@@ -22,7 +22,7 @@ export const weapons: Weapon[] = [
     damageType: 'bludgeoning',
     properties: ['light'],
     mastery: 'slow',
-    bookId: 'srd-5.2.1'
+    bookId: 'XSRD'
   },
   {
     id: 'handaxe',
@@ -33,7 +33,7 @@ export const weapons: Weapon[] = [
     damageType: 'slashing',
     properties: ['light', 'thrown'],
     mastery: 'vex',
-    bookId: 'srd-5.2.1'
+    bookId: 'XSRD'
   },
   {
     id: 'shortsword',
@@ -44,7 +44,7 @@ export const weapons: Weapon[] = [
     damageType: 'piercing',
     properties: ['finesse', 'light'],
     mastery: 'vex',
-    bookId: 'srd-5.2.1'
+    bookId: 'XSRD'
   },
   {
     id: 'scimitar',
@@ -55,7 +55,7 @@ export const weapons: Weapon[] = [
     damageType: 'slashing',
     properties: ['finesse', 'light'],
     mastery: 'nick',
-    bookId: 'srd-5.2.1'
+    bookId: 'XSRD'
   },
   {
     id: 'longsword',
@@ -66,7 +66,7 @@ export const weapons: Weapon[] = [
     damageType: 'slashing',
     properties: ['versatile'],
     mastery: 'sap',
-    bookId: 'srd-5.2.1'
+    bookId: 'XSRD'
   },
   {
     id: 'greatsword',
@@ -77,7 +77,7 @@ export const weapons: Weapon[] = [
     damageType: 'slashing',
     properties: ['heavy', 'two-handed'],
     mastery: 'graze',
-    bookId: 'srd-5.2.1'
+    bookId: 'XSRD'
   },
   {
     id: 'greataxe',
@@ -88,7 +88,7 @@ export const weapons: Weapon[] = [
     damageType: 'slashing',
     properties: ['heavy', 'two-handed'],
     mastery: 'cleave',
-    bookId: 'srd-5.2.1'
+    bookId: 'XSRD'
   },
   {
     id: 'longbow',
@@ -99,7 +99,7 @@ export const weapons: Weapon[] = [
     damageType: 'piercing',
     properties: ['ammunition', 'heavy', 'two-handed'],
     mastery: 'slow',
-    bookId: 'srd-5.2.1'
+    bookId: 'XSRD'
   },
   {
     id: 'warhammer',
@@ -110,6 +110,6 @@ export const weapons: Weapon[] = [
     damageType: 'bludgeoning',
     properties: ['versatile'],
     mastery: 'push',
-    bookId: 'srd-5.2.1'
+    bookId: 'XSRD'
   }
 ];

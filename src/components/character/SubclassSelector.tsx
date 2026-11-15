@@ -1,3 +1,4 @@
+import { isBookAllowed } from '../../engine/restrictions';
 
 import type { CharacterClass } from '../../models/Class';
 
@@ -17,7 +18,7 @@ export default function SubclassSelector({
   onChange
 }: Props) {
   const availableSubclasses = characterClass.subclasses.filter(
-    subclass => allowedBooks.includes(subclass.bookId)
+    subclass => isBookAllowed(subclass.bookId, allowedBooks)
   );
 
   if (characterLevel < characterClass.subclassLevel) {

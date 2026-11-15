@@ -14,7 +14,7 @@ export const equipment: EquipmentItem[] = [
     category: 'weapon',
     costGP: 0.1,
     weight: 1,
-    bookId: 'srd-5.2.1'
+    bookId: 'XSRD'
   },
   {
     id: 'dagger',
@@ -22,7 +22,7 @@ export const equipment: EquipmentItem[] = [
     category: 'weapon',
     costGP: 2,
     weight: 0.5,
-    bookId: 'srd-5.2.1'
+    bookId: 'XSRD'
   },
   {
     id: 'quarterstaff',
@@ -30,7 +30,7 @@ export const equipment: EquipmentItem[] = [
     category: 'weapon',
     costGP: 0.2,
     weight: 2,
-    bookId: 'srd-5.2.1'
+    bookId: 'XSRD'
   },
   {
     id: 'shortsword',
@@ -38,7 +38,7 @@ export const equipment: EquipmentItem[] = [
     category: 'weapon',
     costGP: 10,
     weight: 1,
-    bookId: 'srd-5.2.1'
+    bookId: 'XSRD'
   },
   {
     id: 'longsword',
@@ -46,7 +46,7 @@ export const equipment: EquipmentItem[] = [
     category: 'weapon',
     costGP: 15,
     weight: 1.5,
-    bookId: 'srd-5.2.1'
+    bookId: 'XSRD'
   },
   {
     id: 'greatsword',
@@ -54,7 +54,7 @@ export const equipment: EquipmentItem[] = [
     category: 'weapon',
     costGP: 50,
     weight: 3,
-    bookId: 'srd-5.2.1'
+    bookId: 'XSRD'
   },
   {
     id: 'greataxe',
@@ -62,7 +62,7 @@ export const equipment: EquipmentItem[] = [
     category: 'weapon',
     costGP: 30,
     weight: 3.5,
-    bookId: 'srd-5.2.1'
+    bookId: 'XSRD'
   },
   {
     id: 'flail',
@@ -70,7 +70,7 @@ export const equipment: EquipmentItem[] = [
     category: 'weapon',
     costGP: 10,
     weight: 1,
-    bookId: 'srd-5.2.1'
+    bookId: 'XSRD'
   },
   {
     id: 'javelin',
@@ -78,7 +78,7 @@ export const equipment: EquipmentItem[] = [
     category: 'weapon',
     costGP: 0.5,
     weight: 1,
-    bookId: 'srd-5.2.1'
+    bookId: 'XSRD'
   },
   {
     id: 'light-crossbow',
@@ -86,7 +86,7 @@ export const equipment: EquipmentItem[] = [
     category: 'weapon',
     costGP: 25,
     weight: 2.5,
-    bookId: 'srd-5.2.1'
+    bookId: 'XSRD'
   },
   {
     id: 'longbow',
@@ -94,7 +94,7 @@ export const equipment: EquipmentItem[] = [
     category: 'weapon',
     costGP: 50,
     weight: 1,
-    bookId: 'srd-5.2.1'
+    bookId: 'XSRD'
   },
 
   // ==========================================
@@ -107,7 +107,7 @@ export const equipment: EquipmentItem[] = [
     category: 'armor',
     costGP: 10,
     weight: 5,
-    bookId: 'srd-5.2.1'
+    bookId: 'XSRD'
   },
   {
     id: 'chain-mail',
@@ -115,7 +115,7 @@ export const equipment: EquipmentItem[] = [
     category: 'armor',
     costGP: 75,
     weight: 27.5,
-    bookId: 'srd-5.2.1'
+    bookId: 'XSRD'
   },
   {
     id: 'shield',
@@ -123,7 +123,7 @@ export const equipment: EquipmentItem[] = [
     category: 'shield',
     costGP: 10,
     weight: 3,
-    bookId: 'srd-5.2.1'
+    bookId: 'XSRD'
   },
 
   // ==========================================
@@ -136,7 +136,7 @@ export const equipment: EquipmentItem[] = [
     category: 'adventuring-gear',
     costGP: 2,
     weight: 2.5,
-    bookId: 'srd-5.2.1'
+    bookId: 'XSRD'
   },
   {
     id: 'rope',
@@ -144,7 +144,7 @@ export const equipment: EquipmentItem[] = [
     category: 'adventuring-gear',
     costGP: 1,
     weight: 2.5,
-    bookId: 'srd-5.2.1'
+    bookId: 'XSRD'
   },
   {
     id: 'torch',
@@ -152,7 +152,7 @@ export const equipment: EquipmentItem[] = [
     category: 'adventuring-gear',
     costGP: 0.01,
     weight: 0.5,
-    bookId: 'srd-5.2.1'
+    bookId: 'XSRD'
   },
   {
     id: 'crossbow-bolt',
@@ -160,7 +160,7 @@ export const equipment: EquipmentItem[] = [
     category: 'adventuring-gear',
     costGP: 0.05,
     weight: 0.075,
-    bookId: 'srd-5.2.1'
+    bookId: 'XSRD'
   },
   {
     id: 'crossbow-bolt-case',
@@ -168,7 +168,7 @@ export const equipment: EquipmentItem[] = [
     category: 'adventuring-gear',
     costGP: 1,
     weight: 0.5,
-    bookId: 'srd-5.2.1'
+    bookId: 'XSRD'
   },
 
   // ==========================================
@@ -180,21 +180,21 @@ export const equipment: EquipmentItem[] = [
     name: "Paquetage d'explorateur",
     category: 'pack',
     costGP: 10,
-    bookId: 'srd-5.2.1'
+    bookId: 'XSRD'
   },
   {
     id: 'priests-pack',
     name: 'Paquetage de prêtre',
     category: 'pack',
     costGP: 33,
-    bookId: 'srd-5.2.1'
+    bookId: 'XSRD'
   },
   {
     id: 'scholars-pack',
     name: "Paquetage d'érudit",
     category: 'pack',
     costGP: 40,
-    bookId: 'srd-5.2.1'
+    bookId: 'XSRD'
   }
 ];
 

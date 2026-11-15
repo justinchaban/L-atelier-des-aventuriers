@@ -7,7 +7,7 @@ export const backgrounds: Background[] = [
     name: 'Soldat',
     description:
       'Vous avez été formé au combat et à la discipline militaire.',
-    bookId: 'srd-5.2.1',
+    bookId: 'XSRD',
     ruleset: '2024',
     abilityOptions: ['str', 'dex', 'con'],
     skillProficiencies: [
@@ -22,7 +22,7 @@ export const backgrounds: Background[] = [
     name: 'Criminel',
     description:
       'Vous avez vécu en marge de la loi et développé des talents de discrétion.',
-    bookId: 'srd-5.2.1',
+    bookId: 'XSRD',
     ruleset: '2024',
     abilityOptions: ['dex', 'con', 'int'],
     skillProficiencies: [

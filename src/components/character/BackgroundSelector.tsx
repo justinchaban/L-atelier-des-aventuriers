@@ -1,3 +1,4 @@
+import { isBookAllowed } from '../../engine/restrictions';
 
 import { backgrounds } from '../../data/backgrounds';
 import { feats } from '../../data/feats';
@@ -14,7 +15,7 @@ export default function BackgroundSelector({
   onChange
 }: Props) {
   const availableBackgrounds = backgrounds.filter(
-    background => allowedBooks.includes(background.bookId)
+    background => isBookAllowed(background.bookId, allowedBooks)
   );
 
   return (

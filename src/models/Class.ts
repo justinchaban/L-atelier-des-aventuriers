@@ -51,7 +51,7 @@ export interface ImportedContentMetadata {
   // Nom d'origine
   originalName: string;
 
-  // Code source d'origine : XPHB, PHB...
+  // Code source original conservé sans normalisation : XPHB, FRHoF...
   originalSource: string;
 
   // Référence complète si disponible

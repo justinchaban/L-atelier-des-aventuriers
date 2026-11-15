@@ -1,3 +1,4 @@
+import { isBookAllowed } from '../../engine/restrictions';
 
 import { weaponMasteries } from '../../data/weaponMasteries';
 import { weapons } from '../../data/weapons';
@@ -28,7 +29,7 @@ export default function WeaponMasterySelector({
   );
 
   const availableWeapons = weapons.filter(weapon =>
-    allowedBooks.includes(weapon.bookId)
+    isBookAllowed(weapon.bookId, allowedBooks)
   );
 
   const validIds = validateWeaponMasteries(

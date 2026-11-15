@@ -1,3 +1,4 @@
+import { isBookAllowed } from '../../engine/restrictions';
 import { getFightingStyleCount } from '../../engine/fightingStyles';
 import WeaponMasterySelector from './WeaponMasterySelector';
 import { fightingStyleChoice } from '../../data/fightingStyles';
@@ -65,7 +66,7 @@ export default function ClassSelector({
 }: Props) {
   const availableClasses = classes.filter(
     characterClass =>
-      allowedBooks.includes(characterClass.bookId)
+      isBookAllowed(characterClass.bookId, allowedBooks)
   );
 
   const [previewId, setPreviewId] = useState<string | null>(null);

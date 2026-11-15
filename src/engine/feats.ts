@@ -1,3 +1,4 @@
+import { isBookAllowed } from './restrictions';
 
 import { feats } from '../data/feats';
 import { backgrounds } from '../data/backgrounds';
@@ -14,7 +15,7 @@ export function getAvailableFeats(
       return false;
     }
 
-    if (!allowedBooks.includes(feat.bookId)) {
+    if (!isBookAllowed(feat.bookId, allowedBooks)) {
       return false;
     }
 

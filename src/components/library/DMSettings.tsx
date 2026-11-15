@@ -1,7 +1,8 @@
+import { isBookAllowed } from '../../engine/restrictions';
 
 import { useState } from 'react';
 
-import { books } from '../../data/books';
+import { books, normalizeBookId, normalizeBookIds } from '../../data/books';
 import type { Campaign } from '../../models/Campaign';
 import { generateCampaignCode } from '../../services/campaignCode';
 
@@ -17,15 +18,15 @@ export default function DMSettings({
   const [feedback, setFeedback] = useState('');
 
   function toggleBook(bookId: string) {
-    const allowed = campaign.allowedBooks.includes(bookId);
+    const allowed = isBookAllowed(bookId, campaign.allowedBooks);
 
     const allowedBooks = allowed
-      ? campaign.allowedBooks.filter(id => id !== bookId)
+      ? campaign.allowedBooks.filter(id => normalizeBookId(id) !== normalizeBookId(bookId))
       : [...campaign.allowedBooks, bookId];
 
     onChange({
       ...campaign,
-      allowedBooks
+      allowedBooks: normalizeBookIds(allowedBooks)
     });
 
     setFeedback('');
@@ -71,7 +72,7 @@ export default function DMSettings({
           <label key={book.id}>
             <input
               type="checkbox"
-              checked={campaign.allowedBooks.includes(book.id)}
+              checked={isBookAllowed(book.id, campaign.allowedBooks)}
               onChange={() => toggleBook(book.id)}
             />
 

@@ -1,3 +1,4 @@
+import { normalizeBookId } from '../data/books';
 
 import type {
   AbilityId,
@@ -22,6 +23,7 @@ import type {
 
 import {
   getEntrySource,
+  getOriginalEntrySource,
   isJsonRecord
 } from './contentImporter';
 
@@ -92,7 +94,7 @@ function getString(
 function normalizeSource(
   value: string
 ): string {
-  return value.trim().toUpperCase();
+  return normalizeBookId(value);
 }
 
 function sameText(
@@ -153,7 +155,7 @@ function createMetadata(
     originalName:
       getString(entry.name) ?? '',
     originalSource:
-      getEntrySource(entry) ?? 'UNKNOWN',
+      getOriginalEntrySource(entry) ?? 'UNKNOWN',
     originalReference: reference,
     hasUnresolvedCopy: false
   };

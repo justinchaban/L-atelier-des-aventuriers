@@ -1,3 +1,4 @@
+import { normalizeBookId } from '../../data/books';
 
 import { useRef, useState } from 'react';
 import type { ChangeEvent } from 'react';
@@ -114,7 +115,7 @@ function getClassSources(
         .flatMap(group => group.entries)
         .map(entry =>
           typeof entry.source === 'string'
-            ? entry.source.trim().toUpperCase()
+            ? normalizeBookId(entry.source)
             : ''
         )
         .filter(Boolean)

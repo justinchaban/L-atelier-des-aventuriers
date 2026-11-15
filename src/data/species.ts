@@ -5,7 +5,7 @@ export const species: Species[] = [
   {
     id: 'human-2024',
     name: 'Humain',
-    bookId: 'srd-5.2.1',
+    bookId: 'XSRD',
     ruleset: '2024',
     description: 'Une espèce polyvalente et adaptable.',
     speed: 30,
@@ -15,7 +15,7 @@ export const species: Species[] = [
   {
     id: 'elf-2024',
     name: 'Elfe',
-    bookId: 'srd-5.2.1',
+    bookId: 'XSRD',
     ruleset: '2024',
     description: 'Un peuple lié à la magie et aux traditions anciennes.',
     speed: 30,
@@ -52,7 +52,7 @@ export const species: Species[] = [
   {
     id: 'dwarf-2024',
     name: 'Nain',
-    bookId: 'srd-5.2.1',
+    bookId: 'XSRD',
     ruleset: '2024',
     description: 'Un peuple résistant, réputé pour son endurance.',
     speed: 30,

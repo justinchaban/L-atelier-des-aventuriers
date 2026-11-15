@@ -1,6 +1,7 @@
+import { isBookAllowed } from '../../engine/restrictions';
 
 import { species } from '../../data/species';
-import { books } from '../../data/books';
+import { getBookById } from '../../data/books';
 
 interface Props {
   selectedId: string;
@@ -14,7 +15,7 @@ export default function SpeciesSelector({
   onChange
 }: Props) {
   const availableSpecies = species.filter(
-    item => allowedBooks.includes(item.bookId)
+    item => isBookAllowed(item.bookId, allowedBooks)
   );
 
   return (
@@ -27,9 +28,7 @@ export default function SpeciesSelector({
 
       <div className="cards">
         {availableSpecies.map(item => {
-          const source = books.find(
-            book => book.id === item.bookId
-          );
+          const source = getBookById(item.bookId);
 
           const isSelected = selectedId === item.id;
 
