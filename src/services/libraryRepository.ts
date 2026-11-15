@@ -11,7 +11,7 @@ export interface LibraryImportApproval {
   acceptedUpdates?: readonly LibraryContentId[];
 }
 
-function readSnapshot(context: LibraryTransaction, complete: (snapshot: LibrarySnapshot) => void): void {
+export function readLibrarySnapshotInTransaction(context: LibraryTransaction, complete: (snapshot: LibrarySnapshot) => void): void {
   const snapshot: LibrarySnapshot = { imports: [], contents: [], revisions: [], dependencies: [] };
   let remaining = LIBRARY_STORES.length;
   for (const store of LIBRARY_STORES) context.request(context.store(store).getAll(), records => {
@@ -24,7 +24,7 @@ function readSnapshot(context: LibraryTransaction, complete: (snapshot: LibraryS
 export async function readLibrarySnapshot(database: LibraryDatabase): Promise<LibrarySnapshot> {
   let snapshot!: LibrarySnapshot;
   await database.runTransaction(LIBRARY_STORES, 'readonly', context => {
-    readSnapshot(context, result => { snapshot = result; });
+    readLibrarySnapshotInTransaction(context, result => { snapshot = result; });
   });
   return snapshot;
 }
@@ -69,7 +69,7 @@ export class LibraryRepository {
     let result: LibraryRepositoryCommitResult = { success: false, reason: 'storage-error', issues: ['Transaction non terminée.'] };
     try {
       await this.database.runTransaction(LIBRARY_STORES, 'readwrite', context => {
-        readSnapshot(context, current => {
+        readLibrarySnapshotInTransaction(context, current => {
           // La transaction readwrite verrouille les quatre magasins avant ces vérifications.
           if (librarySnapshotToken(current) !== plan.expectedSnapshot) {
             result = { success: false, reason: 'concurrent-change', issues: ['La bibliothèque a changé depuis la préparation. Recalculer le plan et renouveler les accords.'] };

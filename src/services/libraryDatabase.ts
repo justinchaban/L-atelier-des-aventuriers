@@ -73,7 +73,7 @@ function validIdentity(value: unknown): value is LibraryIdentity {
 }
 
 /** Contrôles de format seulement : les relations et conflits métier relèvent de P1.3. */
-function validateRecord(store: LibraryStore, value: unknown): void {
+export function validateLibraryRecord(store: LibraryStore, value: unknown): void {
   let valid = isRecord(value);
   if (isRecord(value)) {
     if (store === 'imports') valid = value.recordVersion === 1 && fingerprint(value.id) && typeof value.originalText === 'string' &&
@@ -275,7 +275,7 @@ export class LibraryDatabase {
     try {
       for (const operation of operations) {
         if (!LIBRARY_STORES.includes(operation.store) || !['add', 'put', 'delete'].includes(operation.operation)) throw new TypeError('Opération invalide.');
-        if (operation.operation !== 'delete') validateRecord(operation.store, operation.value);
+        if (operation.operation !== 'delete') validateLibraryRecord(operation.store, operation.value);
       }
     } catch (error) { throw asLibraryDatabaseError(error, 'invalid-data'); }
     await this.runTransaction([...new Set(operations.map(operation => operation.store))], 'readwrite', context => {

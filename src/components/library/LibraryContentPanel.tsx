@@ -7,6 +7,7 @@ import {
 } from '../../services/libraryQuery';
 import type { LibraryConversionState, LibraryEntryView } from '../../services/libraryQuery';
 import EntryRenderer from '../content/EntryRenderer';
+import LibraryContentManagement from './LibraryContentManagement';
 
 function readingError(error: unknown): string {
   if (!(error instanceof LibraryDatabaseError)) return 'Impossible de consulter la bibliothèque. Réessayez sans effacer vos données.';
@@ -18,7 +19,7 @@ function readingError(error: unknown): string {
   }
 }
 
-function LibraryEntryDetails({ entry }: { entry: LibraryEntryView }) {
+function LibraryEntryDetails({ entry, onChanged, disabled }: { entry: LibraryEntryView; onChanged: (message: string) => void; disabled: boolean }) {
   const revision = entry.revision;
   return (
     <article className="library-content-details" aria-label={`Détails de ${entry.name}`}>
@@ -26,6 +27,7 @@ function LibraryEntryDetails({ entry }: { entry: LibraryEntryView }) {
       <p>{LIBRARY_CATEGORY_LABELS[entry.category]} · {entry.bookName} · Livre canonique : <strong>{entry.bookId}</strong></p>
       <p><strong>{LIBRARY_CONVERSION_LABELS[entry.conversionState]}</strong> · {entry.status === 'active' ? 'Actif' : 'Archivé'}</p>
       {entry.issues.length > 0 && <ul className="warning">{entry.issues.map((issue, index) => <li key={index}>{issue}</li>)}</ul>}
+      <LibraryContentManagement key={entry.id} entry={entry} onChanged={onChanged} disabled={disabled} />
       <h4>Provenance originale</h4>
       {entry.origins.length ? <ul>{entry.origins.map(({ provenance, filenames }, index) => (
         <li key={index}>
@@ -70,7 +72,8 @@ export default function LibraryContentPanel({ refreshToken = 0 }: { refreshToken
   const [name, setName] = useState('');
   const [category, setCategory] = useState<ContentCategory | 'all'>('all');
   const [bookId, setBookId] = useState('all');
-  const [status, setStatus] = useState<'all' | 'active' | 'archived'>('all');
+  const [status, setStatus] = useState<'all' | 'active' | 'archived'>('active');
+  const [managementMessage, setManagementMessage] = useState('');
   const [conversionState, setConversionState] = useState<LibraryConversionState | 'all'>('all');
 
   const refresh = useCallback(async () => {
@@ -137,10 +140,11 @@ export default function LibraryContentPanel({ refreshToken = 0 }: { refreshToken
           {Object.entries(LIBRARY_CONVERSION_LABELS).map(([id, label]) => <option key={id} value={id}>{label}</option>)}
         </select></label>
       </div>
+      {managementMessage && <p role="status">{managementMessage}</p>}
       {loading && <p role="status">Chargement de la bibliothèque…</p>}
       {error && <p role="alert" className="warning">{error}</p>}
-      {!loading && !error && <>
-        {entries.length === 0 ? <p>Aucun contenu enregistré. Sélectionnez un fichier dans le panneau d’import, puis confirmez son enregistrement pour l’ajouter à la bibliothèque.</p> : <>
+      {!error && <>
+        {entries.length === 0 ? !loading && <p>Aucun contenu enregistré. Sélectionnez un fichier dans le panneau d’import, puis confirmez son enregistrement pour l’ajouter à la bibliothèque.</p> : <>
           <p role="status">{filtered.length} contenu(s) affiché(s) sur {entries.length} enregistré(s).</p>
           {filtered.length === 0 && <p>Aucun contenu ne correspond aux filtres.</p>}
           <ul className="library-content-list">{filtered.map(entry => <li key={entry.id}>
@@ -152,7 +156,7 @@ export default function LibraryContentPanel({ refreshToken = 0 }: { refreshToken
             </button>
           </li>)}</ul>
         </>}
-        {selected && <LibraryEntryDetails entry={selected} />}
+        {selected && <LibraryEntryDetails entry={selected} disabled={loading} onChanged={message => { setManagementMessage(message); void refresh(); }} />}
         {selectedId && !selected && <p role="status">Le contenu sélectionné n’est plus disponible dans cette consultation.</p>}
       </>}
     </section>

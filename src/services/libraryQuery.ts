@@ -63,11 +63,11 @@ function originalAt(document: unknown, pointer: string): JsonRecord {
 }
 
 /** Projection en lecture seule, sans migration, conversion ni réparation automatique. */
-export function describeLibrarySnapshot(snapshot: LibrarySnapshot): LibraryEntryView[] {
+export function describeLibrarySnapshot(snapshot: LibrarySnapshot, selectedIds?: readonly LibraryContentId[]): LibraryEntryView[] {
   const documents = new Map(snapshot.imports.map(document => [document.id, document]));
   const revisions = new Map(snapshot.revisions.map(revision => [JSON.stringify([revision.contentId, revision.revisionHash]), revision]));
   const parsed = new Map<string, unknown>();
-  return snapshot.contents.map<LibraryEntryView>(record => {
+  return snapshot.contents.filter(record => !selectedIds || selectedIds.includes(record.identity.id)).map<LibraryEntryView>(record => {
     if (!record?.identity || typeof record.identity.id !== 'string' || typeof record.identity.normalizedName !== 'string' ||
         typeof record.identity.bookId !== 'string' || !Object.hasOwn(LIBRARY_CATEGORY_LABELS, record.identity.category)) {
       throw new LibraryDatabaseError('invalid-data', 'Un contenu enregistré a une identité illisible. Aucune donnée n’a été modifiée.');
@@ -122,18 +122,37 @@ export function describeLibrarySnapshot(snapshot: LibrarySnapshot): LibraryEntry
 /** Les filtres portent sur le catalogue enregistré, sans appliquer d'autorisation de campagne. */
 export function filterLibraryEntries(entries: readonly LibraryEntryView[], filters: LibraryQueryFilters = {}): LibraryEntryView[] {
   const query = normalizeLibraryName(filters.name ?? '');
+  const status = filters.status ?? 'active';
   return entries.filter(entry =>
     (!query || normalizeLibraryName(entry.name).includes(query)) &&
     (!filters.category || filters.category === 'all' || entry.category === filters.category) &&
     (!filters.bookId || filters.bookId === 'all' || entry.bookId === normalizeBookId(filters.bookId)) &&
-    (!filters.status || filters.status === 'all' || entry.status === filters.status) &&
+    (status === 'all' || entry.status === status) &&
     (!filters.conversionState || filters.conversionState === 'all' || entry.conversionState === filters.conversionState));
+}
+
+export interface LibraryRevisionView {
+  revision: LibraryRevision;
+  isActive: boolean;
+  details: LibraryEntryView;
+}
+export function describeLibraryHistory(snapshot: LibrarySnapshot, id: LibraryContentId): LibraryRevisionView[] {
+  const content = snapshot.contents.find(content => content.identity.id === id);
+  if (!content) throw new LibraryDatabaseError('invalid-data', 'Contenu introuvable.');
+  return snapshot.revisions.filter(revision => revision.contentId === id)
+    .sort((a,b) => b.createdAt.localeCompare(a.createdAt) || a.revisionHash.localeCompare(b.revisionHash))
+    .map(revision => ({ revision, isActive: revision.revisionHash === content.activeRevision,
+      details: describeLibrarySnapshot({ ...snapshot, contents: snapshot.contents.map(record => record.identity.id === id ? { ...record, activeRevision: revision.revisionHash } : record) }, [id])[0]
+    }));
 }
 
 export class LibraryQueryService {
   constructor(private readonly database = new LibraryDatabase()) {}
   async consult(): Promise<LibraryEntryView[]> {
     return describeLibrarySnapshot(await readLibrarySnapshot(this.database));
+  }
+  async history(id: LibraryContentId): Promise<LibraryRevisionView[]> {
+    return describeLibraryHistory(await readLibrarySnapshot(this.database), id);
   }
   close(): void { this.database.close(); }
 }

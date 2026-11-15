@@ -49,7 +49,7 @@ export function librarySnapshotToken(snapshot: LibrarySnapshot): string {
 const text = (value: unknown): string => typeof value === 'string' ? value : '';
 const owner = (name: unknown, source: unknown) => ({ name: text(name), source: text(source) });
 
-function identityInput(entry: JsonRecord, category: ContentCategory, originalKey: string, provider: ContentProvider, namespace?: string): LibraryIdentityInput {
+export function libraryIdentityInput(entry: JsonRecord, category: ContentCategory, originalKey: string, provider: ContentProvider, namespace?: string): LibraryIdentityInput {
   return {
     provider, category, name: text(entry.name), source: text(entry.source),
     ...(namespace !== undefined ? { namespace } : {}),
@@ -106,7 +106,7 @@ export async function prepareLibraryImport(input: LibraryImportInput, snapshot: 
       const entry = entries[index];
       const pointer = `/${group.originalKey.replace(/~/g, '~0').replace(/\//g, '~1')}/${index}`;
       const location = { importId, pointer };
-      const result = isJsonRecord(entry) ? createLibraryIdentity(identityInput(entry, group.category, group.originalKey, provider, input.namespace)) : null;
+      const result = isJsonRecord(entry) ? createLibraryIdentity(libraryIdentityInput(entry, group.category, group.originalKey, provider, input.namespace)) : null;
       if (!result?.success) {
         const problems = result && !result.success ? result.issues : ['Entrée JSON non objet.'];
         decisions.push({ kind: 'unidentified', location, issues: problems });
@@ -184,7 +184,7 @@ export async function prepareLibraryImport(input: LibraryImportInput, snapshot: 
       identity.classOwner?.name === normalizeLibraryName(className) && identity.classOwner.source === normalizeBookId(classSource) &&
       [identity.normalizedName, normalizeLibraryName(text(raws.get(identity.id)?.shortName))].includes(normalizeLibraryName(name)));
     if (matches.length > 1) { problem(requester, `Propriétaire de sous-classe ambigu : ${name}.`); return null; }
-    if (matches.length === 1) return identityInput(raws.get(matches[0].id)!, 'subclass', 'subclass', provider, input.namespace);
+    if (matches.length === 1) return libraryIdentityInput(raws.get(matches[0].id)!, 'subclass', 'subclass', provider, input.namespace);
     // Sans nom long connu, l'identité de référence reste explicitement non résolue.
     return { ...basic('subclass', name, source), classOwner: owner(className, classSource) };
   };
@@ -196,10 +196,10 @@ export async function prepareLibraryImport(input: LibraryImportInput, snapshot: 
       const target = findSubclass(text(entry.className), text(entry.classSource), text(entry.subclassShortName), text(entry.subclassSource), id);
       if (target) connect(id, target, 'owner');
     }
-    if (isJsonRecord(entry._copy)) connect(id, identityInput({ ...entry, ...entry._copy }, item.identity.category, item.revision.origins[0].originalKey, provider, input.namespace), 'copy');
+    if (isJsonRecord(entry._copy)) connect(id, libraryIdentityInput({ ...entry, ...entry._copy }, item.identity.category, item.revision.origins[0].originalKey, provider, input.namespace), 'copy');
     if (item.identity.category === 'class') {
       for (const child of [...registry.values()].filter(child => child.category === 'subclass' && child.provider === provider && child.namespace === item.identity.namespace && child.classOwner?.name === item.identity.normalizedName && child.classOwner.source === item.identity.bookId)) {
-        connect(id, identityInput(raws.get(child.id)!, 'subclass', 'subclass', provider, input.namespace), 'feature');
+        connect(id, libraryIdentityInput(raws.get(child.id)!, 'subclass', 'subclass', provider, input.namespace), 'feature');
       }
     }
     for (const [property, category] of [['classFeatures', 'classFeature'], ['subclassFeatures', 'subclassFeature']] as const) {

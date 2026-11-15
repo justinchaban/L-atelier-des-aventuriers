@@ -6,6 +6,7 @@ import JoinCampaign from '../components/campaign/JoinCampaign';
 import DMSettings from '../components/library/DMSettings';
 import ContentImportPanel from '../components/content/ContentImportPanel';
 import LibraryContentPanel from '../components/library/LibraryContentPanel';
+import LibraryBackupPanel from '../components/library/LibraryBackupPanel';
 
 import {
   books,
@@ -578,6 +579,8 @@ export default function App() {
                 ))}
               </div>
             </section>
+
+            <LibraryBackupPanel onRestored={() => setLibraryRefreshToken(value => value + 1)} />
 
             <LibraryContentPanel refreshToken={libraryRefreshToken} />
 
