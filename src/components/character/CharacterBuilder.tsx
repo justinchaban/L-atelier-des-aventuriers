@@ -1,4 +1,4 @@
-
+import CharacterInventoryPreview from './CharacterInventoryPreview';
 import { useState } from 'react';
 
 import {
@@ -42,6 +42,7 @@ import BackgroundSelector from './BackgroundSelector';
 import ClassSelector from './ClassSelector';
 import SpeciesSelector from './SpeciesSelector';
 import SpeciesTraits from './SpeciesTraits';
+import StartingEquipmentSelector from './StartingEquipmentSelector';
 
 interface Props {
   character: Character;
@@ -362,7 +363,8 @@ export default function CharacterBuilder({
       subclassId: '',
       classSkills: [],
       fightingStyles: [],
-      weaponMasteries: []
+      weaponMasteries: [],
+      classEquipmentOptionId: ''
     };
 
     const validatedChoices = characterClass
@@ -444,6 +446,17 @@ export default function CharacterBuilder({
         backgroundAbilityMode: choice.mode,
         backgroundAbilityPrimary: choice.primary ?? '',
         backgroundAbilitySecondary: choice.secondary ?? ''
+      }
+    });
+  }
+
+  function handleClassEquipmentChange(
+    optionId: string
+  ) {
+    onChange({
+      choices: {
+        ...character.choices,
+        classEquipmentOptionId: optionId
       }
     });
   }
@@ -651,30 +664,21 @@ export default function CharacterBuilder({
             />
 
             {isStandardMethod && !isStandardComplete && (
-              <p
-                className="muted"
-                role="alert"
-              >
+              <p className="muted" role="alert">
                 ⚠️ Vous devez attribuer les six valeurs
                 du tableau standard avant de continuer.
               </p>
             )}
 
             {isPointBuyMethod && !isPointBuyComplete && (
-              <p
-                className="muted"
-                role="alert"
-              >
+              <p className="muted" role="alert">
                 ⚠️ Vous devez utiliser les 27 points
                 avant de continuer.
               </p>
             )}
 
             {isRollMethod && !isRollComplete && (
-              <p
-                className="muted"
-                role="alert"
-              >
+              <p className="muted" role="alert">
                 ⚠️ Lancez les six scores et attribuez
                 chaque résultat à une caractéristique
                 avant de continuer.
@@ -695,10 +699,14 @@ export default function CharacterBuilder({
 
         {step === 5 && (
           <>
-            <h3>Équipement</h3>
-            <p className="muted">
-              Cette étape sera développée prochainement.
-            </p>
+            <StartingEquipmentSelector
+              character={character}
+              onChange={handleClassEquipmentChange}
+            />
+
+            <CharacterInventoryPreview
+              character={character}
+            />
           </>
         )}
 

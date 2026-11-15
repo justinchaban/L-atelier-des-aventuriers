@@ -4,10 +4,15 @@ import { useEffect, useState } from 'react';
 import CharacterBuilder from '../components/character/CharacterBuilder';
 import JoinCampaign from '../components/campaign/JoinCampaign';
 import DMSettings from '../components/library/DMSettings';
+import ContentImportPanel from '../components/content/ContentImportPanel';
 
-import { books } from '../data/books';
+import {
+  books,
+  normalizeBookId
+} from '../data/books';
 
 import type { Character } from '../models/Character';
+
 import {
   createCampaign,
   type Campaign
@@ -18,7 +23,16 @@ import {
   saveCharacters
 } from '../services/storage';
 
-// Création d'un personnage
+// ==========================================
+// TYPES
+// ==========================================
+
+type AppSpace = 'player' | 'dm' | 'library';
+
+// ==========================================
+// CRÉATION D'UN PERSONNAGE
+// ==========================================
+
 function newCharacter(): Character {
   return {
     schemaVersion: 1,
@@ -50,9 +64,17 @@ function newCharacter(): Character {
   };
 }
 
-// Vérification des données d'une campagne
-function isValidCampaign(value: unknown): value is Campaign {
-  if (typeof value !== 'object' || value === null) {
+// ==========================================
+// VALIDATION D'UNE CAMPAGNE
+// ==========================================
+
+function isValidCampaign(
+  value: unknown
+): value is Campaign {
+  if (
+    typeof value !== 'object' ||
+    value === null
+  ) {
     return false;
   }
 
@@ -64,15 +86,41 @@ function isValidCampaign(value: unknown): value is Campaign {
     typeof data.createdAt === 'string' &&
     Array.isArray(data.allowedBooks) &&
     data.allowedBooks.every(
-      (id: unknown) =>
-        typeof id === 'string' &&
-        books.some(book => book.id === id)
+      (id: unknown) => typeof id === 'string'
     )
   );
 }
 
-// Chargement d'une campagne depuis le navigateur
-function loadCampaign(key: string): Campaign | null {
+// ==========================================
+// MIGRATION DES LIVRES D'UNE CAMPAGNE
+// ==========================================
+
+function migrateCampaignBooks(
+  campaign: Campaign
+): Campaign {
+  const allowedBooks = [
+    ...new Set(
+      campaign.allowedBooks
+        .map(normalizeBookId)
+        .filter(id =>
+          books.some(book => book.id === id)
+        )
+    )
+  ];
+
+  return {
+    ...campaign,
+    allowedBooks
+  };
+}
+
+// ==========================================
+// CHARGEMENT D'UNE CAMPAGNE
+// ==========================================
+
+function loadCampaign(
+  key: string
+): Campaign | null {
   try {
     const saved = localStorage.getItem(key);
 
@@ -82,9 +130,11 @@ function loadCampaign(key: string): Campaign | null {
 
     const parsed: unknown = JSON.parse(saved);
 
-    if (isValidCampaign(parsed)) {
-      return parsed;
+    if (!isValidCampaign(parsed)) {
+      return null;
     }
+
+    return migrateCampaignBooks(parsed);
   } catch {
     // Stockage indisponible ou données invalides.
   }
@@ -92,34 +142,54 @@ function loadCampaign(key: string): Campaign | null {
   return null;
 }
 
-export default function App() {
-  // Personnages
-  const [characters, setCharacters] = useState<Character[]>(
-    loadCharacters
-  );
+// ==========================================
+// APPLICATION
+// ==========================================
 
-  const [selectedId, setSelectedId] = useState<string | null>(
-    null
-  );
+export default function App() {
+  // ----------------------------------------
+  // PERSONNAGES
+  // ----------------------------------------
+
+  const [characters, setCharacters] =
+    useState<Character[]>(loadCharacters);
+
+  const [selectedId, setSelectedId] =
+    useState<string | null>(null);
 
   const [message, setMessage] = useState('');
 
-  // Navigation
-  const [activeSpace, setActiveSpace] = useState<
-    'player' | 'dm'
-  >('player');
+  // ----------------------------------------
+  // NAVIGATION
+  // ----------------------------------------
 
-  // Campagne rejointe par le joueur
-  const [joinedCampaign, setJoinedCampaign] = useState<
-    Campaign | null
-  >(() => loadCampaign('atelier-joined-campaign'));
+  const [activeSpace, setActiveSpace] =
+    useState<AppSpace>('player');
 
-  // Campagne configurée par le MJ
-  const [campaign, setCampaign] = useState<Campaign>(
-    () => loadCampaign('atelier-campaign') ?? createCampaign()
-  );
+  // ----------------------------------------
+  // CAMPAGNE JOUEUR
+  // ----------------------------------------
 
-  // Sauvegarde de la campagne joueur
+  const [joinedCampaign, setJoinedCampaign] =
+    useState<Campaign | null>(
+      () => loadCampaign('atelier-joined-campaign')
+    );
+
+  // ----------------------------------------
+  // CAMPAGNE MJ
+  // ----------------------------------------
+
+  const [campaign, setCampaign] =
+    useState<Campaign>(
+      () =>
+        loadCampaign('atelier-campaign') ??
+        createCampaign()
+    );
+
+  // ========================================
+  // SAUVEGARDE CAMPAGNE JOUEUR
+  // ========================================
+
   useEffect(() => {
     try {
       if (joinedCampaign) {
@@ -128,7 +198,9 @@ export default function App() {
           JSON.stringify(joinedCampaign)
         );
       } else {
-        localStorage.removeItem('atelier-joined-campaign');
+        localStorage.removeItem(
+          'atelier-joined-campaign'
+        );
       }
     } catch {
       setMessage(
@@ -137,7 +209,10 @@ export default function App() {
     }
   }, [joinedCampaign]);
 
-  // Sauvegarde de la campagne MJ
+  // ========================================
+  // SAUVEGARDE CAMPAGNE MJ
+  // ========================================
+
   useEffect(() => {
     try {
       localStorage.setItem(
@@ -151,12 +226,18 @@ export default function App() {
     }
   }, [campaign]);
 
-  // Personnage actuellement sélectionné
+  // ========================================
+  // PERSONNAGE SÉLECTIONNÉ
+  // ========================================
+
   const current = characters.find(
     character => character.id === selectedId
   );
 
-  // Sauvegarde des personnages
+  // ========================================
+  // SAUVEGARDE PERSONNAGES
+  // ========================================
+
   function update(next: Character[]) {
     setCharacters(next);
 
@@ -169,8 +250,13 @@ export default function App() {
     }
   }
 
-  // Modification du personnage actuel
-  function patch(partial: Partial<Character>) {
+  // ========================================
+  // MODIFICATION D'UN PERSONNAGE
+  // ========================================
+
+  function patch(
+    partial: Partial<Character>
+  ) {
     if (!current) {
       return;
     }
@@ -178,42 +264,75 @@ export default function App() {
     update(
       characters.map(character =>
         character.id === current.id
-          ? { ...character, ...partial }
+          ? {
+              ...character,
+              ...partial
+            }
           : character
       )
     );
   }
 
-  // Nouveau personnage
+  // ========================================
+  // CRÉATION D'UN PERSONNAGE
+  // ========================================
+
   function create() {
     const character = newCharacter();
 
-    update([...characters, character]);
+    update([
+      ...characters,
+      character
+    ]);
+
     setSelectedId(character.id);
   }
 
-  // Export des personnages
+  // ========================================
+  // EXPORT DES PERSONNAGES
+  // ========================================
+
   function exportData() {
     const blob = new Blob(
-      [JSON.stringify(characters, null, 2)],
-      { type: 'application/json' }
+      [
+        JSON.stringify(
+          characters,
+          null,
+          2
+        )
+      ],
+      {
+        type: 'application/json'
+      }
     );
 
     const url = URL.createObjectURL(blob);
+
     const link = document.createElement('a');
 
     link.href = url;
     link.download = 'mes-personnages.json';
+
     link.click();
 
     URL.revokeObjectURL(url);
   }
 
-  // Navigation entre les espaces
-  function navigate(space: 'player' | 'dm') {
+  // ========================================
+  // NAVIGATION
+  // ========================================
+
+  function navigate(
+    space: AppSpace
+  ) {
     setActiveSpace(space);
     setSelectedId(null);
+    setMessage('');
   }
+
+  // ========================================
+  // AFFICHAGE
+  // ========================================
 
   return (
     <div className="shell">
@@ -226,7 +345,9 @@ export default function App() {
             DONJONS & DRAGONS · 2024 + COMPATIBILITÉ 2014
           </small>
 
-          <h1>L'Atelier des Aventuriers</h1>
+          <h1>
+            L'Atelier des Aventuriers
+          </h1>
         </div>
       </header>
 
@@ -234,24 +355,41 @@ export default function App() {
       <nav>
         <button
           type="button"
-          onClick={() => navigate('player')}
+          className={
+            activeSpace === 'player'
+              ? 'active'
+              : ''
+          }
+          onClick={() =>
+            navigate('player')
+          }
         >
           Espace Joueur
         </button>
 
         <button
           type="button"
-          onClick={() => navigate('dm')}
+          className={
+            activeSpace === 'dm'
+              ? 'active'
+              : ''
+          }
+          onClick={() =>
+            navigate('dm')
+          }
         >
           Espace MJ
         </button>
 
         <button
           type="button"
+          className={
+            activeSpace === 'library'
+              ? 'active'
+              : ''
+          }
           onClick={() =>
-            document.getElementById('library')?.scrollIntoView({
-              behavior: 'smooth'
-            })
+            navigate('library')
           }
         >
           Bibliothèque
@@ -261,7 +399,10 @@ export default function App() {
       <main>
         {/* MESSAGES */}
         {message && (
-          <p role="alert" className="warning">
+          <p
+            role="alert"
+            className="warning"
+          >
             {message}
           </p>
         )}
@@ -278,8 +419,13 @@ export default function App() {
               <section className="panel">
                 <div className="section-title">
                   <div>
-                    <small>VOTRE CHRONIQUE</small>
-                    <h2>Mes personnages</h2>
+                    <small>
+                      VOTRE CHRONIQUE
+                    </small>
+
+                    <h2>
+                      Mes personnages
+                    </h2>
                   </div>
 
                   <button
@@ -303,10 +449,14 @@ export default function App() {
                       className="character-card"
                       key={character.id}
                       onClick={() =>
-                        setSelectedId(character.id)
+                        setSelectedId(
+                          character.id
+                        )
                       }
                     >
-                      <strong>{character.name}</strong>
+                      <strong>
+                        {character.name}
+                      </strong>
 
                       <span>
                         Niveau {character.level}
@@ -321,14 +471,17 @@ export default function App() {
                 {characters.length === 0 && (
                   <p className="muted">
                     Aucun personnage pour le moment.
-                    Commence par créer ton premier aventurier !
+                    Commence par créer ton premier
+                    aventurier !
                   </p>
                 )}
 
                 <button
                   type="button"
                   onClick={exportData}
-                  disabled={!characters.length}
+                  disabled={
+                    !characters.length
+                  }
                 >
                   Exporter mes personnages (JSON)
                 </button>
@@ -338,7 +491,9 @@ export default function App() {
                 character={current}
                 campaign={joinedCampaign}
                 onChange={patch}
-                onClose={() => setSelectedId(null)}
+                onClose={() =>
+                  setSelectedId(null)
+                }
               />
             )}
           </>
@@ -353,39 +508,60 @@ export default function App() {
         )}
 
         {/* BIBLIOTHÈQUE */}
-        <section className="panel" id="library">
-          <small>CATALOGUE</small>
+        {activeSpace === 'library' && (
+          <>
+            <section
+              className="panel"
+              id="library"
+            >
+              <div className="section-title">
+                <div>
+                  <small>
+                    CATALOGUE
+                  </small>
 
-          <h2>Bibliothèque générale</h2>
-
-          <p className="muted">
-            Ouvrages référencés pour la création
-            des personnages.
-          </p>
-
-          <div className="book-list">
-            {books.map(book => (
-              <div key={book.id}>
-                <span>{book.name}</span>
-
-                <small>
-                  {book.ruleset}
-                  {' · '}
-                  {book.integrated
-                    ? 'Intégré'
-                    : 'À intégrer'}
-                </small>
+                  <h2>
+                    Bibliothèque générale
+                  </h2>
+                </div>
               </div>
-            ))}
-          </div>
-        </section>
+
+              <p className="muted">
+                Retrouvez les ouvrages référencés
+                pour la création des personnages.
+              </p>
+
+              <div className="book-list">
+                {books.map(book => (
+                  <div key={book.id}>
+                    <span>
+                      {book.name}
+                    </span>
+
+                    <small>
+                      {book.ruleset}
+                      {' · '}
+                      {book.integrated
+                        ? 'Intégré'
+                        : 'À intégrer'}
+                    </small>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <ContentImportPanel />
+          </>
+        )}
       </main>
 
       {/* PIED DE PAGE */}
       <footer>
-        Prototype 0.1 · Sauvegarde locale sur cet appareil
+        Prototype 0.1 · Sauvegarde locale
+        sur cet appareil
         {' · '}
-        Projet non affilié à Wizards of the Coast
+        Projet non affilié à Wizards
+        of the Coast
       </footer>
     </div>
   );

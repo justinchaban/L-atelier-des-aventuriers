@@ -4,17 +4,26 @@ import type {
   Ruleset
 } from './Species';
 
-// Les dés de vie disponibles pour les classes
+// ==========================================
+// DÉS DE VIE
+// ==========================================
+
 export type HitDie = 6 | 8 | 10 | 12;
 
-// Catégories d'armures
+// ==========================================
+// CATÉGORIES D'ARMURES
+// ==========================================
+
 export type ArmorType =
   | 'light'
   | 'medium'
   | 'heavy'
   | 'shield';
 
-// Types de maîtrises
+// ==========================================
+// TYPES DE MAÎTRISES
+// ==========================================
+
 export type ClassProficiency =
   | 'armor'
   | 'weapon'
@@ -22,18 +31,60 @@ export type ClassProficiency =
   | 'savingThrow'
   | 'skill';
 
-// Une maîtrise accordée par la classe
 export interface ClassProficiencyEntry {
   type: ClassProficiency;
   id: string;
 }
 
-// Choix proposé au joueur
+// ==========================================
+// MÉTADONNÉES D'IMPORTATION
+// ==========================================
+
+export interface ImportedContentMetadata {
+  // Fournisseur des données
+  provider:
+    | 'srd'
+    | '5etools'
+    | 'homebrew'
+    | 'custom';
+
+  // Nom d'origine
+  originalName: string;
+
+  // Code source d'origine : XPHB, PHB...
+  originalSource: string;
+
+  // Référence complète si disponible
+  originalReference?: string;
+
+  // Présence d'un héritage non résolu
+  hasUnresolvedCopy?: boolean;
+}
+
+// ==========================================
+// CONTENU STRUCTURÉ
+// ==========================================
+
+// Les descriptions 5e.tools peuvent
+// contenir des paragraphes, tableaux,
+// listes et autres structures JSON.
+//
+// Nous conservons ces données sans
+// imposer immédiatement un format
+// d'affichage particulier.
+
+export type StructuredContent = unknown[];
+
+// ==========================================
+// CHOIX DU JOUEUR
+// ==========================================
+
 export interface ClassChoice {
   id: string;
   name: string;
   description: string;
   count: number;
+
   options: {
     id: string;
     name: string;
@@ -41,39 +92,75 @@ export interface ClassChoice {
   }[];
 }
 
-// Une capacité de classe
+// ==========================================
+// CAPACITÉS
+// ==========================================
+
 export interface ClassFeature {
   id: string;
   name: string;
   description: string;
+
   levelRequired: number;
+
   choices?: ClassChoice[];
+
+  // Livre dont provient la capacité
+  bookId?: string;
+
+  // Référence et provenance originales
+  importMetadata?: ImportedContentMetadata;
+
+  // Description JSON originale
+  structuredEntries?: StructuredContent;
 }
 
-// Une sous-classe
+// ==========================================
+// SOUS-CLASSES
+// ==========================================
+
 export interface Subclass {
   id: string;
   name: string;
   description: string;
+
   bookId: string;
   ruleset: Ruleset;
+
   features: ClassFeature[];
+
+  // Nom court utilisé dans les références
+  shortName?: string;
+
+  // Provenance de la sous-classe
+  importMetadata?: ImportedContentMetadata;
+
+  // Contenu structuré facultatif
+  structuredEntries?: StructuredContent;
 }
 
-// Configuration des sorts
+// ==========================================
+// MAGIE
+// ==========================================
+
 export interface Spellcasting {
   ability: AbilityId;
+
   type:
     | 'full'
     | 'half'
     | 'third'
     | 'pact';
+
   preparation:
     | 'prepared'
     | 'known';
 }
 
-// Définition complète d'une classe
+// ==========================================
+// CLASSE
+// ==========================================
+
 export interface CharacterClass {
   id: string;
   name: string;
@@ -98,4 +185,10 @@ export interface CharacterClass {
   subclasses: Subclass[];
 
   spellcasting?: Spellcasting;
+
+  // Provenance de la classe
+  importMetadata?: ImportedContentMetadata;
+
+  // Contenu structuré facultatif
+  structuredEntries?: StructuredContent;
 }
