@@ -1,0 +1,18 @@
+{
+  "feat": [
+    {
+      "name": "Sceau Cible de démonstration",
+      "source": "TESTREF",
+      "entries": [
+        "Sceau fictif servant de cible au test."
+      ]
+    },
+    {
+      "name": "Sceau Lecteur de démonstration",
+      "source": "TESTREF",
+      "entries": [
+        "Cette description fictive cite Sceau Cible de démonstration."
+      ]
+    }
+  ]
+}

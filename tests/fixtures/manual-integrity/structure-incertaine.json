@@ -1,0 +1,21 @@
+{
+  "feat": [
+    {
+      "name": "Sceau Isolé de démonstration",
+      "source": "TESTUNKNOWN",
+      "entries": [
+        "Sceau fictif sans mécanique."
+      ]
+    },
+    {
+      "name": "Sceau Opaque de démonstration",
+      "source": "TESTUNKNOWN",
+      "entries": [
+        "Données fictives dont les liens ne sont pas interprétés."
+      ],
+      "customMechanics": {
+        "externalId": "identifiant-opaque-fictif"
+      }
+    }
+  ]
+}

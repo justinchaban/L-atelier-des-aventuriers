@@ -8,6 +8,7 @@ import {
 import type { LibraryConversionState, LibraryEntryView } from '../../services/libraryQuery';
 import EntryRenderer from '../content/EntryRenderer';
 import LibraryContentManagement from './LibraryContentManagement';
+import LibraryDiagnosticsPanel from './LibraryDiagnosticsPanel';
 
 function readingError(error: unknown): string {
   if (!(error instanceof LibraryDatabaseError)) return 'Impossible de consulter la bibliothèque. Réessayez sans effacer vos données.';
@@ -74,6 +75,7 @@ export default function LibraryContentPanel({ refreshToken = 0 }: { refreshToken
   const [bookId, setBookId] = useState('all');
   const [status, setStatus] = useState<'all' | 'active' | 'archived'>('active');
   const [managementMessage, setManagementMessage] = useState('');
+  const [diagnosticRefreshToken, setDiagnosticRefreshToken] = useState(0);
   const [conversionState, setConversionState] = useState<LibraryConversionState | 'all'>('all');
 
   const refresh = useCallback(async () => {
@@ -121,6 +123,7 @@ export default function LibraryContentPanel({ refreshToken = 0 }: { refreshToken
         <button type="button" onClick={() => { void refresh(); }} disabled={loading}>Actualiser la bibliothèque</button>
       </div>
       <p className="muted">Ces contenus sont enregistrés sur ce navigateur. Le créateur ne les utilise pas encore, même lorsqu’ils sont convertis. Leur présence n’autorise aucun livre dans une campagne.</p>
+      <LibraryDiagnosticsPanel refreshToken={refreshToken + diagnosticRefreshToken} />
       <div className="fields">
         <label>Rechercher par nom<input type="search" value={name} onChange={event => setName(event.target.value)} /></label>
         <label>Catégorie<select value={category} onChange={event => setCategory(event.target.value as ContentCategory | 'all')}>
@@ -156,7 +159,7 @@ export default function LibraryContentPanel({ refreshToken = 0 }: { refreshToken
             </button>
           </li>)}</ul>
         </>}
-        {selected && <LibraryEntryDetails entry={selected} disabled={loading} onChanged={message => { setManagementMessage(message); void refresh(); }} />}
+        {selected && <LibraryEntryDetails entry={selected} disabled={loading} onChanged={message => { setManagementMessage(message); setDiagnosticRefreshToken(value => value + 1); void refresh(); }} />}
         {selectedId && !selected && <p role="status">Le contenu sélectionné n’est plus disponible dans cette consultation.</p>}
       </>}
     </section>

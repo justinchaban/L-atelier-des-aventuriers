@@ -1,0 +1,26 @@
+{
+  "feat": [
+    {
+      "name": "Copie Fictive Alpha",
+      "source": "TESTCYCLE",
+      "entries": [
+        "Description fictive A."
+      ],
+      "_copy": {
+        "name": "Copie Fictive Beta",
+        "source": "TESTCYCLE"
+      }
+    },
+    {
+      "name": "Copie Fictive Beta",
+      "source": "TESTCYCLE",
+      "entries": [
+        "Description fictive B."
+      ],
+      "_copy": {
+        "name": "Copie Fictive Alpha",
+        "source": "TESTCYCLE"
+      }
+    }
+  ]
+}

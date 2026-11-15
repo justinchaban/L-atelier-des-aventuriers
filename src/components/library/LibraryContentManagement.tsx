@@ -5,6 +5,7 @@ import type { LibraryManagementAction, LibraryManagementPlan } from '../../servi
 import { LibraryQueryService } from '../../services/libraryQuery';
 import type { LibraryEntryView, LibraryRevisionView } from '../../services/libraryQuery';
 import EntryRenderer from '../content/EntryRenderer';
+import LibraryPermanentDeletion from './LibraryPermanentDeletion';
 
 const actionLabels:Record<LibraryManagementAction,string>={archive:'Archiver',restore:'Restaurer','activate-revision':'Activer cette révision'};
 const availabilityLabels={available:'disponible',missing:'absente',archived:'archivée','different-revision':'sur une autre révision',unresolved:'non résolue'};
@@ -67,6 +68,7 @@ export default function LibraryContentManagement({entry,onChanged,disabled=false
       <button type="button" disabled={busy} onClick={()=>{setPlan(null);setConfirmed(false);setStale(false);setError('');}}>Annuler</button>
       {stale&&<button type="button" disabled={busy||disabled} onClick={()=>{void prepare(plan.action,plan.targetRevision);}}>Préparer à nouveau l’opération</button>}
     </div>}
+    <LibraryPermanentDeletion key={entry.id} entry={entry} disabled={busy||disabled} onDeleted={onChanged} />
     <h4>Historique des révisions</h4>
     {historyLoading&&<p role="status">Chargement de l’historique…</p>}
     {historyError&&<p role="alert" className="warning">{historyError}</p>}

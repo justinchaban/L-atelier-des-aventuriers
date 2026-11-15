@@ -1,0 +1,18 @@
+{
+  "feat": [
+    {
+      "name": "Jeton Azur de démonstration",
+      "source": "TESTDELETE",
+      "entries": [
+        "Jeton fictif bleu, sans effet de jeu ni référence à un autre contenu."
+      ]
+    },
+    {
+      "name": "Jeton Ambre de démonstration",
+      "source": "TESTDELETE",
+      "entries": [
+        "Jeton fictif doré, indépendant du premier. Aucun effet de jeu."
+      ]
+    }
+  ]
+}

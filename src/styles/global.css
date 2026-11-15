@@ -1071,3 +1071,10 @@ footer {
 }
 
 .library-import-approval input { width: auto; flex-shrink: 0; }
+
+.library-content-panel > .library-import-confirmation pre {
+  max-height: 260px;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
