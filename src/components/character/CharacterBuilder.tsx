@@ -1,23 +1,44 @@
-import BackgroundAbilitySelector from './BackgroundAbilitySelector.tsx';
+
+import { useState } from 'react';
+
+import {
+  getPointBuyTotal,
+  isValidStandardArray,
+  POINT_BUY_BUDGET,
+  type AbilityGenerationMethod
+} from '../../engine/abilityGeneration';
 
 import type {
   BackgroundAbilityChoice
 } from '../../engine/backgroundAbilities';
 
 import { getBackgroundOriginFeat } from '../../engine/feats';
-import { useState } from 'react';
-import BackgroundSelector from './BackgroundSelector';
 import { classes } from '../../data/classes';
+
 import {
   cleanSubclassChoices,
   validateFeatureChoices
 } from '../../engine/characterChoices';
-import { validateFightingStyles } from '../../engine/fightingStyles';
-import { validateWeaponMasteries } from '../../engine/weaponMastery';
 
-import type { Character, Ability } from '../../models/Character';
+import {
+  validateFightingStyles
+} from '../../engine/fightingStyles';
+
+import {
+  validateWeaponMasteries
+} from '../../engine/weaponMastery';
+
+import type {
+  Character,
+  Ability,
+  AbilityScores
+} from '../../models/Character';
+
 import type { Campaign } from '../../models/Campaign';
 
+import BackgroundAbilitySelector from './BackgroundAbilitySelector';
+import AbilityScoreSelector from './AbilityScoreSelector';
+import BackgroundSelector from './BackgroundSelector';
 import ClassSelector from './ClassSelector';
 import SpeciesSelector from './SpeciesSelector';
 import SpeciesTraits from './SpeciesTraits';
@@ -39,6 +60,28 @@ const steps = [
   'Récapitulatif'
 ] as const;
 
+const EMPTY_ABILITIES: AbilityScores = {
+  str: 0,
+  dex: 0,
+  con: 0,
+  int: 0,
+  wis: 0,
+  cha: 0
+};
+
+const POINT_BUY_START: AbilityScores = {
+  str: 8,
+  dex: 8,
+  con: 8,
+  int: 8,
+  wis: 8,
+  cha: 8
+};
+
+const EMPTY_ROLL_ASSIGNMENTS = [
+  '', '', '', '', '', ''
+];
+
 export default function CharacterBuilder({
   character,
   campaign,
@@ -55,7 +98,6 @@ export default function CharacterBuilder({
       ? character.choices.subclassId
       : '';
 
-  
   const backgroundAbilityMode =
     character.choices.backgroundAbilityMode === '1-1-1'
       ? '1-1-1'
@@ -63,18 +105,165 @@ export default function CharacterBuilder({
 
   const backgroundAbilityChoice: BackgroundAbilityChoice = {
     mode: backgroundAbilityMode,
+
     primary:
       typeof character.choices.backgroundAbilityPrimary === 'string'
         ? character.choices.backgroundAbilityPrimary as Ability
         : undefined,
+
     secondary:
       typeof character.choices.backgroundAbilitySecondary === 'string'
         ? character.choices.backgroundAbilitySecondary as Ability
         : undefined
   };
 
+  const abilityMethod =
+    character.choices.abilityGenerationMethod;
+
+  const isStandardMethod =
+    abilityMethod === 'standard';
+
+  const isPointBuyMethod =
+    abilityMethod === 'point-buy';
+
+  const isRollMethod =
+    abilityMethod === 'roll';
+
+  const isStandardComplete =
+    !isStandardMethod ||
+    isValidStandardArray(character.abilities);
+
+  const pointBuyTotal =
+    getPointBuyTotal(character.abilities);
+
+  const isPointBuyComplete =
+    !isPointBuyMethod ||
+    pointBuyTotal === POINT_BUY_BUDGET;
+
+  const savedRolls =
+    character.choices.abilityRolls;
+
+  const savedRollAssignments =
+    character.choices.abilityRollAssignments;
+
+  const hasSixRolls =
+    Array.isArray(savedRolls) &&
+    savedRolls.length === 6 &&
+    savedRolls.every(value =>
+      Number.isInteger(Number(value)) &&
+      Number(value) >= 3 &&
+      Number(value) <= 18
+    );
+
+  const hasSixAssignments =
+    Array.isArray(savedRollAssignments) &&
+    savedRollAssignments.length === 6 &&
+    savedRollAssignments.every(value =>
+      typeof value === 'string' &&
+      /^[0-5]$/.test(value)
+    ) &&
+    new Set(savedRollAssignments).size === 6;
+
+  const rollAbilitiesMatch =
+    hasSixRolls &&
+    hasSixAssignments &&
+    Array.isArray(savedRolls) &&
+    Array.isArray(savedRollAssignments) &&
+    ([
+      'str', 'dex', 'con', 'int', 'wis', 'cha'
+    ] as Ability[]).every((ability, index) =>
+      character.abilities[ability] ===
+      Number(savedRolls[Number(savedRollAssignments[index])])
+    );
+
+  const isRollComplete =
+    !isRollMethod ||
+    rollAbilitiesMatch;
+
+  const abilitiesComplete =
+    isStandardComplete &&
+    isPointBuyComplete &&
+    isRollComplete;
+
+  const canContinue =
+    step !== 4 || abilitiesComplete;
+
+  function handleAbilityMethodChange(
+    method: AbilityGenerationMethod
+  ) {
+    if (method === abilityMethod) {
+      return;
+    }
+
+    const updatedChoices: Character['choices'] = {
+      ...character.choices,
+      abilityGenerationMethod: method
+    };
+
+    if (method === 'roll') {
+      updatedChoices.abilityRolls = [];
+      updatedChoices.abilityRollAssignments =
+        [...EMPTY_ROLL_ASSIGNMENTS];
+    }
+
+    onChange({
+      choices: updatedChoices,
+
+      ...(method === 'standard' || method === 'roll'
+        ? {
+            abilities: { ...EMPTY_ABILITIES }
+          }
+        : method === 'point-buy'
+          ? {
+              abilities: { ...POINT_BUY_START }
+            }
+          : {})
+    });
+  }
+
+  function handleRollChange(
+    scores: number[],
+    assignments: string[]
+  ) {
+    if (
+      scores.length !== 6 ||
+      !scores.every(score =>
+        Number.isInteger(score) &&
+        score >= 3 &&
+        score <= 18
+      )
+    ) {
+      return;
+    }
+
+    onChange({
+      abilities: { ...EMPTY_ABILITIES },
+      choices: {
+        ...character.choices,
+        abilityRolls: scores.map(String),
+        abilityRollAssignments: assignments
+      }
+    });
+  }
+
+  function handleRollAssignmentChange(
+    assignments: string[],
+    abilities: AbilityScores
+  ) {
+    onChange({
+      abilities,
+      choices: {
+        ...character.choices,
+        abilityRollAssignments: assignments
+      }
+    });
+  }
 
   function nextStep() {
+    if (!canContinue) {
+      return;
+    }
+
     setStep(current =>
       Math.min(current + 1, steps.length - 1)
     );
@@ -84,6 +273,17 @@ export default function CharacterBuilder({
     setStep(current =>
       Math.max(current - 1, 0)
     );
+  }
+
+  function handleStepClick(targetStep: number) {
+    if (
+      targetStep > 4 &&
+      !abilitiesComplete
+    ) {
+      return;
+    }
+
+    setStep(targetStep);
   }
 
   function handleLevelChange(level: number) {
@@ -216,21 +416,20 @@ export default function CharacterBuilder({
     });
   }
 
+  function handleBackgroundChange(backgroundId: string) {
+    const originFeat = getBackgroundOriginFeat(backgroundId);
 
-function handleBackgroundChange(backgroundId: string) {
-  const originFeat = getBackgroundOriginFeat(backgroundId);
-
-  onChange({
-    backgroundId,
-    choices: {
-      ...character.choices,
-      backgroundOriginFeatId: originFeat?.id ?? '',
-      backgroundAbilityMode: '2-1',
-      backgroundAbilityPrimary: '',
-      backgroundAbilitySecondary: ''
-    }
-  });
-}
+    onChange({
+      backgroundId,
+      choices: {
+        ...character.choices,
+        backgroundOriginFeatId: originFeat?.id ?? '',
+        backgroundAbilityMode: '2-1',
+        backgroundAbilityPrimary: '',
+        backgroundAbilitySecondary: ''
+      }
+    });
+  }
 
   function handleBackgroundAbilityChange(
     choice: BackgroundAbilityChoice
@@ -244,7 +443,6 @@ function handleBackgroundChange(backgroundId: string) {
       }
     });
   }
-
 
   return (
     <section className="panel character-builder">
@@ -272,7 +470,11 @@ function handleBackgroundChange(backgroundId: string) {
             aria-current={
               index === step ? 'step' : undefined
             }
-            onClick={() => setStep(index)}
+            onClick={() => handleStepClick(index)}
+            disabled={
+              index > 4 &&
+              !abilitiesComplete
+            }
           >
             <span>{index + 1}</span>
             {name}
@@ -341,10 +543,7 @@ function handleBackgroundChange(backgroundId: string) {
             allowedBooks={allowedBooks}
             characterLevel={character.level}
             selectedSubclassId={selectedSubclassId}
-
-            selectedFeatureChoices={
-              character.choices
-            }
+            selectedFeatureChoices={character.choices}
 
             onFeatureChoiceChange={(key, ids) =>
               onChange({
@@ -362,17 +561,13 @@ function handleBackgroundChange(backgroundId: string) {
             }
 
             selectedFightingStyles={
-              Array.isArray(
-                character.choices.fightingStyles
-              )
+              Array.isArray(character.choices.fightingStyles)
                 ? character.choices.fightingStyles
                 : []
             }
 
             selectedWeaponMasteries={
-              Array.isArray(
-                character.choices.weaponMasteries
-              )
+              Array.isArray(character.choices.weaponMasteries)
                 ? character.choices.weaponMasteries
                 : []
             }
@@ -387,10 +582,7 @@ function handleBackgroundChange(backgroundId: string) {
             }
 
             onChange={handleClassChange}
-
-            onSubclassChange={
-              handleSubclassChange
-            }
+            onSubclassChange={handleSubclassChange}
 
             onSkillsChange={skills =>
               onChange({
@@ -411,8 +603,6 @@ function handleBackgroundChange(backgroundId: string) {
             }
           />
         )}
-
-
 
         {step === 3 && (
           <>
@@ -442,18 +632,71 @@ function handleBackgroundChange(backgroundId: string) {
           </>
         )}
 
-
-
-        {step >= 4 && step <= 5 && (
+        {step === 4 && (
           <>
-            <h3>{steps[step]}</h3>
+            <AbilityScoreSelector
+              character={character}
+              onChange={abilities =>
+                onChange({ abilities })
+              }
+              onMethodChange={handleAbilityMethodChange}
+              onRollChange={handleRollChange}
+              onRollAssignmentChange={
+                handleRollAssignmentChange
+              }
+            />
 
+            {isStandardMethod && !isStandardComplete && (
+              <p
+                className="muted"
+                role="alert"
+              >
+                ⚠️ Vous devez attribuer les six valeurs
+                du tableau standard avant de continuer.
+              </p>
+            )}
+
+            {isPointBuyMethod && !isPointBuyComplete && (
+              <p
+                className="muted"
+                role="alert"
+              >
+                ⚠️ Vous devez utiliser les 27 points
+                avant de continuer.
+              </p>
+            )}
+
+            {isRollMethod && !isRollComplete && (
+              <p
+                className="muted"
+                role="alert"
+              >
+                ⚠️ Lancez les six scores et attribuez
+                chaque résultat à une caractéristique
+                avant de continuer.
+              </p>
+            )}
+
+            {(isStandardMethod ||
+              isPointBuyMethod ||
+              isRollMethod) &&
+              abilitiesComplete && (
+                <p className="class-builder-confirmation">
+                  ✓ Les six caractéristiques ont été
+                  correctement attribuées.
+                </p>
+              )}
+          </>
+        )}
+
+        {step === 5 && (
+          <>
+            <h3>Équipement</h3>
             <p className="muted">
               Cette étape sera développée prochainement.
             </p>
           </>
         )}
-
 
         {step === 6 && (
           <>
@@ -492,7 +735,10 @@ function handleBackgroundChange(backgroundId: string) {
           type="button"
           className="primary"
           onClick={nextStep}
-          disabled={step === steps.length - 1}
+          disabled={
+            step === steps.length - 1 ||
+            !canContinue
+          }
         >
           Suivant →
         </button>

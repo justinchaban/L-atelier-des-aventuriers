@@ -945,3 +945,79 @@ footer {
     flex-direction: column;
   }
 }
+
+
+.ability-score-grid {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(190px, 1fr)
+  );
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.ability-score-card {
+  padding: 18px;
+  border: 1px solid var(--border, #444);
+  border-radius: 12px;
+}
+
+.ability-score-card h4 {
+  margin: 0 0 16px;
+}
+
+.ability-score-card label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ability-score-card input {
+  width: 100%;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+.ability-score-card p {
+  margin: 12px 0 0;
+}
+
+.ability-score-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.ability-score-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.ability-score-header h4 {
+  margin: 0;
+}
+
+.ability-score-final {
+  font-size: 2.5rem;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.ability-score-modifier {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border, #444);
+}
+
+.ability-score-modifier strong {
+  font-size: 1.5rem;
+}
