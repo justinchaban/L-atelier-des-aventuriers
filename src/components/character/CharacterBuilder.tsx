@@ -1,9 +1,24 @@
-import ClassSelector from './ClassSelector';
+import BackgroundAbilitySelector from './BackgroundAbilitySelector.tsx';
+
+import type {
+  BackgroundAbilityChoice
+} from '../../engine/backgroundAbilities';
+
+import { getBackgroundOriginFeat } from '../../engine/feats';
 import { useState } from 'react';
+import BackgroundSelector from './BackgroundSelector';
+import { classes } from '../../data/classes';
+import {
+  cleanSubclassChoices,
+  validateFeatureChoices
+} from '../../engine/characterChoices';
+import { validateFightingStyles } from '../../engine/fightingStyles';
 import { validateWeaponMasteries } from '../../engine/weaponMastery';
-import type { Character } from '../../models/Character';
+
+import type { Character, Ability } from '../../models/Character';
 import type { Campaign } from '../../models/Campaign';
 
+import ClassSelector from './ClassSelector';
 import SpeciesSelector from './SpeciesSelector';
 import SpeciesTraits from './SpeciesTraits';
 
@@ -32,13 +47,204 @@ export default function CharacterBuilder({
 }: Props) {
   const [step, setStep] = useState(0);
 
+  const allowedBooks =
+    campaign?.allowedBooks ?? ['srd-5.2.1'];
+
+  const selectedSubclassId =
+    typeof character.choices.subclassId === 'string'
+      ? character.choices.subclassId
+      : '';
+
+  
+  const backgroundAbilityMode =
+    character.choices.backgroundAbilityMode === '1-1-1'
+      ? '1-1-1'
+      : '2-1';
+
+  const backgroundAbilityChoice: BackgroundAbilityChoice = {
+    mode: backgroundAbilityMode,
+    primary:
+      typeof character.choices.backgroundAbilityPrimary === 'string'
+        ? character.choices.backgroundAbilityPrimary as Ability
+        : undefined,
+    secondary:
+      typeof character.choices.backgroundAbilitySecondary === 'string'
+        ? character.choices.backgroundAbilitySecondary as Ability
+        : undefined
+  };
+
+
   function nextStep() {
-    setStep(current => Math.min(current + 1, steps.length - 1));
+    setStep(current =>
+      Math.min(current + 1, steps.length - 1)
+    );
   }
 
   function previousStep() {
-    setStep(current => Math.max(current - 1, 0));
+    setStep(current =>
+      Math.max(current - 1, 0)
+    );
   }
+
+  function handleLevelChange(level: number) {
+    if (
+      !Number.isInteger(level) ||
+      level < 1 ||
+      level > 20
+    ) {
+      return;
+    }
+
+    const currentMasteries =
+      Array.isArray(character.choices.weaponMasteries)
+        ? character.choices.weaponMasteries
+        : [];
+
+    const validMasteries = validateWeaponMasteries(
+      character.classId,
+      level,
+      currentMasteries,
+      allowedBooks
+    );
+
+    const currentFightingStyles =
+      Array.isArray(character.choices.fightingStyles)
+        ? character.choices.fightingStyles
+        : [];
+
+    const validFightingStyles = validateFightingStyles(
+      character.classId,
+      selectedSubclassId,
+      level,
+      currentFightingStyles
+    );
+
+    const updatedChoices: Character['choices'] = {
+      ...character.choices,
+      weaponMasteries: validMasteries,
+      fightingStyles: validFightingStyles
+    };
+
+    const characterClass = classes.find(
+      item => item.id === character.classId
+    );
+
+    const validatedChoices = characterClass
+      ? validateFeatureChoices(
+          updatedChoices,
+          characterClass,
+          level,
+          selectedSubclassId
+        )
+      : updatedChoices;
+
+    onChange({
+      level,
+      choices: validatedChoices
+    });
+  }
+
+  function handleClassChange(classId: string) {
+    if (classId === character.classId) {
+      return;
+    }
+
+    const characterClass = classes.find(
+      item => item.id === classId
+    );
+
+    const resetChoices: Character['choices'] = {
+      ...character.choices,
+      subclassId: '',
+      classSkills: [],
+      fightingStyles: [],
+      weaponMasteries: []
+    };
+
+    const validatedChoices = characterClass
+      ? validateFeatureChoices(
+          resetChoices,
+          characterClass,
+          character.level,
+          ''
+        )
+      : resetChoices;
+
+    onChange({
+      classId,
+      choices: validatedChoices
+    });
+  }
+
+  function handleSubclassChange(subclassId: string) {
+    const characterClass = classes.find(
+      item => item.id === character.classId
+    );
+
+    if (!characterClass) {
+      return;
+    }
+
+    const cleanedChoices = cleanSubclassChoices(
+      character.choices,
+      characterClass,
+      subclassId
+    );
+
+    const currentFightingStyles =
+      Array.isArray(cleanedChoices.fightingStyles)
+        ? cleanedChoices.fightingStyles
+        : [];
+
+    cleanedChoices.fightingStyles =
+      validateFightingStyles(
+        character.classId,
+        subclassId,
+        character.level,
+        currentFightingStyles
+      );
+
+    const validatedChoices = validateFeatureChoices(
+      cleanedChoices,
+      characterClass,
+      character.level,
+      subclassId
+    );
+
+    onChange({
+      choices: validatedChoices
+    });
+  }
+
+
+function handleBackgroundChange(backgroundId: string) {
+  const originFeat = getBackgroundOriginFeat(backgroundId);
+
+  onChange({
+    backgroundId,
+    choices: {
+      ...character.choices,
+      backgroundOriginFeatId: originFeat?.id ?? '',
+      backgroundAbilityMode: '2-1',
+      backgroundAbilityPrimary: '',
+      backgroundAbilitySecondary: ''
+    }
+  });
+}
+
+  function handleBackgroundAbilityChange(
+    choice: BackgroundAbilityChoice
+  ) {
+    onChange({
+      choices: {
+        ...character.choices,
+        backgroundAbilityMode: choice.mode,
+        backgroundAbilityPrimary: choice.primary ?? '',
+        backgroundAbilitySecondary: choice.secondary ?? ''
+      }
+    });
+  }
+
 
   return (
     <section className="panel character-builder">
@@ -63,7 +269,9 @@ export default function CharacterBuilder({
                 ? 'builder-step active'
                 : 'builder-step'
             }
-            aria-current={index === step ? 'step' : undefined}
+            aria-current={
+              index === step ? 'step' : undefined
+            }
             onClick={() => setStep(index)}
           >
             <span>{index + 1}</span>
@@ -84,56 +292,27 @@ export default function CharacterBuilder({
                   value={character.name}
                   maxLength={80}
                   onChange={event =>
-                    onChange({ name: event.target.value })
+                    onChange({
+                      name: event.target.value
+                    })
                   }
                 />
               </label>
 
-
-<label>
-  Niveau
-  <input
-    type="number"
-    min="1"
-    max="20"
-    value={character.level}
-    onChange={event => {
-      const level = Number(event.target.value);
-
-      if (
-        !Number.isInteger(level) ||
-        level < 1 ||
-        level > 20
-      ) {
-        return;
-      }
-
-      const currentMasteries =
-        Array.isArray(character.choices.weaponMasteries)
-          ? character.choices.weaponMasteries.filter(
-              (id): id is string =>
-                typeof id === 'string'
-            )
-          : [];
-
-      const validMasteries = validateWeaponMasteries(
-        character.classId,
-        level,
-        currentMasteries,
-        campaign?.allowedBooks ?? ['srd-5.2.1']
-      );
-
-      onChange({
-        level,
-        choices: {
-          ...character.choices,
-          weaponMasteries: validMasteries
-        }
-      });
-    }}
-  />
-</label>
-
+              <label>
+                Niveau
+                <input
+                  type="number"
+                  min="1"
+                  max="20"
+                  value={character.level}
+                  onChange={event =>
+                    handleLevelChange(
+                      Number(event.target.value)
+                    )
+                  }
+                />
+              </label>
             </div>
           </>
         )}
@@ -144,130 +323,150 @@ export default function CharacterBuilder({
 
             <SpeciesSelector
               selectedId={character.speciesId}
-              allowedBooks={
-                campaign?.allowedBooks ?? ['srd-5.2.1']
+              allowedBooks={allowedBooks}
+              onChange={speciesId =>
+                onChange({ speciesId })
               }
-              onChange={speciesId => onChange({ speciesId })}
             />
 
-            <SpeciesTraits speciesId={character.speciesId} />
+            <SpeciesTraits
+              speciesId={character.speciesId}
+            />
           </>
         )}
 
-        
-{step === 2 && (
-<ClassSelector
-  selectedId={character.classId}
-  allowedBooks={
-    campaign?.allowedBooks ?? ['srd-5.2.1']
-  }
-  characterLevel={character.level}
+        {step === 2 && (
+          <ClassSelector
+            selectedId={character.classId}
+            allowedBooks={allowedBooks}
+            characterLevel={character.level}
+            selectedSubclassId={selectedSubclassId}
 
-  selectedSubclassId={
-    typeof character.choices.subclassId === 'string'
-      ? character.choices.subclassId
-      : ''
-  }
-
-  selectedSkills={
-    Array.isArray(character.choices.classSkills)
-      ? character.choices.classSkills.filter(
-          (skill): skill is string =>
-            typeof skill === 'string'
-        )
-      : []
-  }
-
-  selectedFightingStyles={
-    Array.isArray(character.choices.fightingStyles)
-      ? character.choices.fightingStyles.filter(
-          (style): style is string =>
-            typeof style === 'string'
-        )
-      : []
-  }
-
-  
-selectedWeaponMasteries={
-  Array.isArray(character.choices.weaponMasteries)
-    ? character.choices.weaponMasteries.filter(
-        (id): id is string =>
-          typeof id === 'string'
-      )
-    : []
-}
-onWeaponMasteriesChange={weaponIds =>
-  onChange({
-    choices: {
-      ...character.choices,
-      weaponMasteries: weaponIds
-    }
-  })
-}
-
-
-  onChange={classId =>
-    onChange({
-      classId,
-      choices:
-        classId === character.classId
-          ? character.choices
-          : {
-              ...character.choices,
-              subclassId: '',
-              classSkills: [],
-              fightingStyles: [],
-              weaponMasteries: []
+            selectedFeatureChoices={
+              character.choices
             }
-    })
-  }
 
-  onSubclassChange={subclassId =>
-    onChange({
-      choices: {
-        ...character.choices,
-        subclassId
-      }
-    })
-  }
+            onFeatureChoiceChange={(key, ids) =>
+              onChange({
+                choices: {
+                  ...character.choices,
+                  [key]: ids
+                }
+              })
+            }
 
-  onSkillsChange={skills =>
-    onChange({
-      choices: {
-        ...character.choices,
-        classSkills: skills
-      }
-    })
-  }
+            selectedSkills={
+              Array.isArray(character.choices.classSkills)
+                ? character.choices.classSkills
+                : []
+            }
 
-  onFightingStylesChange={styles =>
-    onChange({
-      choices: {
-        ...character.choices,
-        fightingStyles: styles
-      }
-    })
-  }
-/>
+            selectedFightingStyles={
+              Array.isArray(
+                character.choices.fightingStyles
+              )
+                ? character.choices.fightingStyles
+                : []
+            }
 
-)}
+            selectedWeaponMasteries={
+              Array.isArray(
+                character.choices.weaponMasteries
+              )
+                ? character.choices.weaponMasteries
+                : []
+            }
 
-{step >= 3 && step <= 5 && (
-  <>
-    <h3>{steps[step]}</h3>
-    <p className="muted">
-      Cette étape sera développée prochainement.
-    </p>
-  </>
-)}
+            onWeaponMasteriesChange={weaponIds =>
+              onChange({
+                choices: {
+                  ...character.choices,
+                  weaponMasteries: weaponIds
+                }
+              })
+            }
+
+            onChange={handleClassChange}
+
+            onSubclassChange={
+              handleSubclassChange
+            }
+
+            onSkillsChange={skills =>
+              onChange({
+                choices: {
+                  ...character.choices,
+                  classSkills: skills
+                }
+              })
+            }
+
+            onFightingStylesChange={styles =>
+              onChange({
+                choices: {
+                  ...character.choices,
+                  fightingStyles: styles
+                }
+              })
+            }
+          />
+        )}
+
+
+
+        {step === 3 && (
+          <>
+            <BackgroundSelector
+              selectedId={character.backgroundId}
+              allowedBooks={allowedBooks}
+              onChange={handleBackgroundChange}
+            />
+
+            {typeof character.choices.backgroundOriginFeatId === 'string' &&
+              character.choices.backgroundOriginFeatId !== '' &&
+              character.choices.backgroundOriginFeatId ===
+                getBackgroundOriginFeat(character.backgroundId)?.id && (
+                <p className="class-builder-confirmation">
+                  ✓ Don d'origine attribué :{' '}
+                  {getBackgroundOriginFeat(character.backgroundId)?.name}
+                </p>
+              )}
+
+            {character.backgroundId !== '' && (
+              <BackgroundAbilitySelector
+                backgroundId={character.backgroundId}
+                choice={backgroundAbilityChoice}
+                onChange={handleBackgroundAbilityChange}
+              />
+            )}
+          </>
+        )}
+
+
+
+        {step >= 4 && step <= 5 && (
+          <>
+            <h3>{steps[step]}</h3>
+
+            <p className="muted">
+              Cette étape sera développée prochainement.
+            </p>
+          </>
+        )}
 
 
         {step === 6 && (
           <>
             <h3>Récapitulatif</h3>
 
-            <p><strong>Nom :</strong> {character.name}</p>
-            <p><strong>Niveau :</strong> {character.level}</p>
+            <p>
+              <strong>Nom :</strong> {character.name}
+            </p>
+
+            <p>
+              <strong>Niveau :</strong> {character.level}
+            </p>
+
             <p>
               <strong>Espèce :</strong>{' '}
               {character.speciesId || 'Non sélectionnée'}

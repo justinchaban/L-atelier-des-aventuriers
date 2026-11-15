@@ -385,8 +385,190 @@ features: [
             description:
               'Vous améliorez votre résistance aux blessures mortelles et récupérez des points de vie au début de vos tours lorsque vous êtes suffisamment blessé.'
           }
+      
+        ]
+      },
+      {
+        id: 'battle-master-2024',
+        name: 'Maître de bataille',
+        description:
+          'Un guerrier qui maîtrise des manœuvres tactiques pour prendre l’avantage au combat.',
+        bookId: 'srd-5.2.1',
+        ruleset: '2024',
+
+        features: [
+          {
+            id: 'battle-master-combat-superiority',
+            name: 'Supériorité au combat',
+            levelRequired: 3,
+            description:
+              'Vous apprenez trois manœuvres et disposez de quatre dés de supériorité (d8), récupérés après un repos court ou long.',
+            choices: [
+              {
+                id: 'battle-master-maneuvers',
+                name: 'Manœuvres',
+                description:
+                  'Choisissez trois manœuvres de départ.',
+                count: 3,
+                options: [
+                  {
+                    id: 'precision-attack',
+                    name: 'Attaque de précision',
+                    description:
+                      'Ajoutez un dé de supériorité à un jet d’attaque.'
+                  },
+                  {
+                    id: 'trip-attack',
+                    name: 'Attaque renversante',
+                    description:
+                      'Tentez de faire tomber votre cible à terre.'
+                  },
+                  {
+                    id: 'pushing-attack',
+                    name: 'Attaque repoussante',
+                    description:
+                      'Tentez de repousser votre cible.'
+                  },
+                  {
+                    id: 'menacing-attack',
+                    name: 'Attaque menaçante',
+                    description:
+                      'Tentez d’effrayer votre cible.'
+                  },
+                  {
+                    id: 'disarming-attack',
+                    name: 'Attaque désarmante',
+                    description:
+                      'Tentez de désarmer votre cible.'
+                  },
+
+                  {
+                    id: 'commanders-strike',
+                    name: 'Frappe du commandant',
+                    description:
+                      'Permet à un allié d’effectuer une attaque grâce à vos instructions.'
+                  },
+                  {
+                    id: 'maneuvering-attack',
+                    name: 'Attaque de manœuvre',
+                    description:
+                      'Permet à un allié de se repositionner sans provoquer certaines attaques d’opportunité.'
+                  },
+                  {
+                    id: 'rally',
+                    name: 'Ralliement',
+                    description:
+                      'Encourage un allié en lui accordant des points de vie temporaires.'
+                  },
+                  {
+                    id: 'riposte',
+                    name: 'Riposte',
+                    description:
+                      'Permet de contre-attaquer lorsqu’un adversaire vous manque.'
+                  },
+                  {
+                    id: 'feinting-attack',
+                    name: 'Attaque feintée',
+                    description:
+                      'Utilise une feinte pour améliorer votre prochaine attaque.'
+                  },
+                  {
+                    id: 'goading-attack',
+                    name: 'Attaque provocante',
+                    description:
+                      'Incite un adversaire à concentrer ses attaques sur vous.'
+                  },
+                  {
+                    id: 'lunging-attack',
+                    name: 'Attaque allongée',
+                    description:
+                      'Permet d’effectuer une attaque avec un déplacement offensif.'
+                  },
+                  {
+                    id: 'parry',
+                    name: 'Parade',
+                    description:
+                      'Réduit les dégâts subis lors d’une attaque au corps à corps.'
+                  },
+                  {
+                    id: 'sweeping-attack',
+                    name: 'Attaque balayante',
+                    description:
+                      'Permet de toucher une seconde créature proche de la cible.'
+                  },
+                  {
+                    id: 'bait-and-switch',
+                    name: 'Leurre et permutation',
+                    description:
+                      'Échangez votre position avec un allié et améliorez votre défense.'
+                  },
+                  {
+                    id: 'ambush',
+                    name: 'Embuscade',
+                    description:
+                      'Améliore certains tests de Discrétion ou d’initiative.'
+                  },
+                  {
+                    id: 'tactical-assessment',
+                    name: 'Évaluation tactique',
+                    description:
+                      'Améliore certains tests destinés à analyser une situation.'
+                  },
+                  {
+                    id: 'grappling-strike',
+                    name: 'Frappe agrippante',
+                    description:
+                      'Permet de tenter d’agripper une créature après l’avoir touchée.'
+                  },
+                  {
+                    id: 'brace',
+                    name: 'Réception',
+                    description:
+                      'Permet de réagir lorsqu’un adversaire entre à votre portée.'
+                  }
+
+                ]
+              }
+            ]
+          },
+          {
+            id: 'battle-master-student-of-war',
+            name: 'Élève de la guerre',
+            levelRequired: 3,
+            description:
+              'Vous obtenez une maîtrise d’outil d’artisan.'
+          },
+          {
+            id: 'battle-master-know-your-enemy',
+            name: 'Connais ton ennemi',
+            levelRequired: 7,
+            description:
+              'Vous pouvez étudier un adversaire pour obtenir des informations sur ses capacités.'
+          },
+          {
+            id: 'battle-master-improved-superiority',
+            name: 'Supériorité améliorée',
+            levelRequired: 10,
+            description:
+              'Vos dés de supériorité deviennent des d10.'
+          },
+          {
+            id: 'battle-master-relentless',
+            name: 'Implacable',
+            levelRequired: 15,
+            description:
+              'Vous pouvez utiliser certaines manœuvres même lorsque vos dés de supériorité sont épuisés.'
+          },
+          {
+            id: 'battle-master-ultimate-superiority',
+            name: 'Supériorité ultime',
+            levelRequired: 18,
+            description:
+              'Vos dés de supériorité deviennent des d12.'
+          }
         ]
       }
+
     ]
 
   },

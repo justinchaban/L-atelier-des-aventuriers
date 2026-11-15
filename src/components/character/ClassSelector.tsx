@@ -1,3 +1,4 @@
+import { getFightingStyleCount } from '../../engine/fightingStyles';
 import WeaponMasterySelector from './WeaponMasterySelector';
 import { fightingStyleChoice } from '../../data/fightingStyles';
 import ClassChoiceSelector from './ClassChoiceSelector';
@@ -14,6 +15,8 @@ interface Props {
 onSubclassChange: (subclassId: string) => void;
   selectedSkills: string[];
 onSkillsChange: (skills: string[]) => void;
+  selectedFeatureChoices: Record<string, string | string[]>;
+onFeatureChoiceChange: (key: string, ids: string[]) => void;
   selectedWeaponMasteries: string[];
 onWeaponMasteriesChange: (weaponMasteries: string[]) => void;
   selectedFightingStyles: string[];
@@ -52,6 +55,8 @@ export default function ClassSelector({
   selectedSkills,
   selectedFightingStyles,
   selectedWeaponMasteries,
+  selectedFeatureChoices,
+  onFeatureChoiceChange,
   onWeaponMasteriesChange,
   onChange,
   onSubclassChange,
@@ -76,7 +81,13 @@ export default function ClassSelector({
     selectedClass ??
     availableClasses[0];
 
-  function selectClass(characterClass: CharacterClass) {
+  const fightingStyleCount = getFightingStyleCount(
+  selectedId,
+  selectedSubclassId,
+  characterLevel
+);
+
+    function selectClass(characterClass: CharacterClass) {
     setPreviewId(characterClass.id);
     onChange(characterClass.id);
   }
@@ -182,28 +193,19 @@ export default function ClassSelector({
 
 
 
-{selectedId === previewClass.id &&
-  previewClass.skillChoices && (
-    <ClassChoiceSelector
-      choice={previewClass.skillChoices}
-      selectedIds={selectedSkills}
-      onChange={onSkillsChange}
-    />
-  )}
-
-
 
 {selectedId === previewClass.id &&
   previewClass.id === 'fighter-2024' &&
-  characterLevel >= 1 && (
+  fightingStyleCount > 0 && (
     <ClassChoiceSelector
-      choice={fightingStyleChoice}
+      choice={{
+        ...fightingStyleChoice,
+        count: fightingStyleCount
+      }}
       selectedIds={selectedFightingStyles}
       onChange={onFightingStylesChange}
     />
   )}
-
-
 
 {selectedId === previewClass.id &&
   previewClass.id === 'fighter-2024' && (
@@ -230,6 +232,9 @@ export default function ClassSelector({
          
 
 <ClassProgression
+  selectedChoices={selectedFeatureChoices}
+onChoiceChange={onFeatureChoiceChange}
+readOnly={selectedId !== previewClass.id}
   characterClass={previewClass}
   characterLevel={characterLevel}
   selectedSubclassId={

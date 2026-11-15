@@ -1,37 +1,59 @@
-
+import { fightingStyleChoice } from '../../data/fightingStyles';
+import { getBattleMasterProgression } from '../../engine/battleMaster';
 import { useState } from 'react';
 
 import type { CharacterClass } from '../../models/Class';
+import ClassChoiceSelector from './ClassChoiceSelector';
 
 interface Props {
   characterClass: CharacterClass;
   characterLevel: number;
   selectedSubclassId: string;
+  selectedChoices: Record<string, string | string[]>;
+  onChoiceChange: (choiceId: string, ids: string[]) => void;
+  readOnly?: boolean;
 }
 
 export default function ClassProgression({
   characterClass,
   characterLevel,
-  selectedSubclassId
+  selectedSubclassId,
+  selectedChoices,
+  onChoiceChange,
+  readOnly = false
 }: Props) {
   const [showAll, setShowAll] = useState(false);
+  const battleMasterProgression =
+  selectedSubclassId === 'battle-master-2024'
+    ? getBattleMasterProgression(characterLevel)
+    : null;
 
   const levels = Array.from(
     { length: 20 },
     (_, index) => index + 1
   );
 
-  // Recherche de la sous-classe sélectionnée
   const selectedSubclass = characterClass.subclasses.find(
     subclass => subclass.id === selectedSubclassId
   );
+
+  function getSelectedIds(key: string): string[] {
+    const value = selectedChoices[key];
+
+    if (Array.isArray(value)) {
+      return value;
+    }
+
+    return typeof value === 'string' && value
+      ? [value]
+      : [];
+  }
 
   return (
     <section className="class-progression">
       <div className="section-title">
         <div>
           <h4>Progression de classe</h4>
-
           <p className="muted">
             Capacités du {characterClass.name}
             {selectedSubclass
@@ -54,17 +76,26 @@ export default function ClassProgression({
         {levels
           .filter(level => showAll || level <= characterLevel)
           .map(level => {
-            // Capacités de la classe principale
             const classFeatures =
-              characterClass.features.filter(
-                feature => feature.levelRequired === level
-              );
+              characterClass.features
+                .filter(feature => feature.levelRequired === level)
+                .map(feature => ({
+                  feature,
+                  source: 'class' as const
+                }));
 
-            // Capacités de la sous-classe sélectionnée
             const subclassFeatures =
-              selectedSubclass?.features.filter(
-                feature => feature.levelRequired === level
-              ) ?? [];
+              selectedSubclass?.features
+                .filter(feature => feature.levelRequired === level)
+                .map(feature => ({
+                  feature,
+                  source: 'subclass' as const
+                })) ?? [];
+
+            const features = [
+              ...classFeatures,
+              ...subclassFeatures
+            ];
 
             const unlocked = level <= characterLevel;
 
@@ -79,47 +110,112 @@ export default function ClassProgression({
               >
                 <div className="progression-level-header">
                   <strong>Niveau {level}</strong>
-
                   <span>
                     {unlocked ? '✓ Acquis' : 'À débloquer'}
                   </span>
                 </div>
 
-                {classFeatures.length === 0 &&
-                subclassFeatures.length === 0 ? (
+                {features.length === 0 ? (
                   <p className="muted">
                     Aucune nouvelle capacité renseignée
                     pour ce niveau.
                   </p>
                 ) : (
                   <div className="progression-features">
-                    {classFeatures.map(feature => (
-                      <div
-                        key={feature.id}
-                        className="progression-feature"
-                      >
-                        <small>CLASSE</small>
+                    {features.map(({ feature, source }) => {
+                      const choices = (feature.choices ?? []).filter(
+                        choice => !(
+                          characterClass.id === 'fighter-2024' &&
+                          choice.id === fightingStyleChoice.id
+                        )
+                      );
 
-                        <strong>{feature.name}</strong>
+                      const allChoicesComplete =
+                        choices.every(choice => {
+                          const key =
+                            `feature:${source}:${feature.id}:${choice.id}`;
 
-                        <p>{feature.description}</p>
-                      </div>
-                    ))}
+                          const selected = getSelectedIds(key)
+                            .filter(id =>
+                              choice.options.some(
+                                option => option.id === id
+                              )
+                            );
 
-                    {subclassFeatures.map(feature => (
-                      <div
-                        key={feature.id}
-                        className="progression-feature subclass-feature"
-                      >
-                        <small>
-                          SOUS-CLASSE — {selectedSubclass?.name}
-                        </small>
+                          const requiredCount =
+  selectedSubclassId === 'battle-master-2024' &&
+  feature.id === 'battle-master-combat-superiority' &&
+  choice.id === 'battle-master-maneuvers' &&
+  battleMasterProgression
+    ? battleMasterProgression.maneuversKnown
+    : choice.count;
 
-                        <strong>{feature.name}</strong>
+return new Set(selected).size === requiredCount;
+                        });
 
-                        <p>{feature.description}</p>
-                      </div>
-                    ))}
+                      return (
+                        <div
+                          key={`${source}-${feature.id}`}
+                          className={
+                            source === 'subclass'
+                              ? 'progression-feature subclass-feature'
+                              : 'progression-feature'
+                          }
+                        >
+                          <small>
+                            {source === 'class'
+                              ? 'CLASSE'
+                              : `SOUS-CLASSE — ${selectedSubclass?.name}`}
+                          </small>
+
+                          <strong>{feature.name}</strong>
+                          <p>{feature.description}</p>
+
+                          <p className="muted">
+                            {!unlocked
+                              ? '🔒 À débloquer'
+                              : choices.length === 0
+                                ? '✓ Capacité acquise'
+                                : allChoicesComplete
+                                  ? '✓ Choix validés'
+                                  : '⚠️ Choix à effectuer'}
+                          </p>
+
+                          
+{unlocked &&
+  !readOnly &&
+  choices.map(choice => {
+    const key =
+      `feature:${source}:${feature.id}:${choice.id}`;
+
+    const isBattleMasterManeuvers =
+      selectedSubclassId === 'battle-master-2024' &&
+      feature.id === 'battle-master-combat-superiority' &&
+      choice.id === 'battle-master-maneuvers';
+
+    const adjustedChoice =
+      isBattleMasterManeuvers && battleMasterProgression
+        ? {
+            ...choice,
+            count: battleMasterProgression.maneuversKnown
+          }
+        : choice;
+
+    return (
+      <ClassChoiceSelector
+        key={key}
+        choice={adjustedChoice}
+        selectedIds={getSelectedIds(key)}
+        onChange={ids =>
+          onChoiceChange(key, ids)
+        }
+      />
+    );
+  })}
+
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
