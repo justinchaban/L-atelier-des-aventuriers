@@ -1,0 +1,114 @@
+{
+  "_meta": {
+    "description": "Fixture fictive originale : noms et descriptions inventés pour les tests, sans contenu extrait de 5e.tools."
+  },
+  "class": [
+    {
+      "name": "Veilleur de papier",
+      "source": "PHB",
+      "edition": "classic",
+      "hd": {
+        "faces": 8
+      },
+      "primaryAbility": [
+        {
+          "wis": true
+        }
+      ],
+      "proficiency": [
+        "wis"
+      ],
+      "classFeatures": [
+        {
+          "classFeature": "Pli inaugural|Veilleur de papier|PHB|3|PHB",
+          "gainSubclassFeature": true
+        }
+      ]
+    },
+    {
+      "name": "Veilleur de papier",
+      "source": "XPHB",
+      "edition": "one",
+      "hd": {
+        "faces": 8
+      },
+      "primaryAbility": [
+        {
+          "wis": true
+        }
+      ],
+      "proficiency": [
+        "wis"
+      ],
+      "classFeatures": [
+        {
+          "classFeature": "Pli inaugural|Veilleur de papier|XPHB|3|XPHB",
+          "gainSubclassFeature": true
+        }
+      ]
+    }
+  ],
+  "classFeature": [
+    {
+      "name": "Pli inaugural",
+      "source": "PHB",
+      "className": "Veilleur de papier",
+      "classSource": "PHB",
+      "level": 3,
+      "entries": [
+        "Le veilleur dessine un pli imaginaire sur sa carte de papier."
+      ]
+    },
+    {
+      "name": "Pli inaugural",
+      "source": "XPHB",
+      "className": "Veilleur de papier",
+      "classSource": "XPHB",
+      "level": 3,
+      "entries": [
+        "Le veilleur dessine un pli imaginaire sur sa carte de papier."
+      ]
+    }
+  ],
+  "subclass": [
+    {
+      "name": "Plieur des brumes",
+      "shortName": "Plieur des brumes",
+      "source": "PHB",
+      "className": "Veilleur de papier",
+      "classSource": "PHB",
+      "edition": "classic",
+      "subclassFeatures": [
+        "Brume de papier|Veilleur de papier|PHB|Plieur des brumes|PHB|3|PHB"
+      ]
+    },
+    {
+      "name": "Plieur des brumes",
+      "shortName": "Plieur des brumes",
+      "source": "FRHoF",
+      "className": "Veilleur de papier",
+      "classSource": "XPHB",
+      "_copy": {
+        "name": "Plieur des brumes",
+        "shortName": "Plieur des brumes",
+        "source": "PHB",
+        "className": "Veilleur de papier",
+        "classSource": "PHB"
+      }
+    }
+  ],
+  "subclassFeature": [
+    {
+      "name": "Brume de papier",
+      "source": "PHB",
+      "className": "Veilleur de papier",
+      "classSource": "PHB",
+      "subclassShortName": "Plieur des brumes",
+      "subclassSource": "PHB",
+      "level": 3,
+      "entries": [
+        "Une brume fictive prend la forme d’un origami."
+      ]
+    }
+  ]
+}

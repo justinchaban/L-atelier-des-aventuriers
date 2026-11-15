@@ -91,17 +91,31 @@ test('imports : livre canonique, provenance et références originales intactes'
 });
 
 
-test('fichier Guerrier : conversion conservée, sous-classes canoniques', () => {
-  const text = fs.readFileSync(require('node:path').join(__dirname, '../class/class-fighter.json'), 'utf8');
-  const analysis = analyzeContentJson(text, 'class-fighter.json', 'local-import');
+test('fixture fictive : classes 2014/2024, capacités et sous-classe héritée canoniques', () => {
+  const text = fs.readFileSync(require('node:path').join(__dirname, 'fixtures/fictive-classes.json'), 'utf8');
+  const analysis = analyzeContentJson(text, 'fictive-classes.json', 'local-import');
+  assert.equal(analysis.success, true);
+  assert.equal(analysis.unresolvedFeatures, 0);
   for (const source of ['PHB', 'XPHB']) {
     const result = importClasses(analysis, source);
+    assert.deepEqual(result.errors, []);
     assert.equal(result.classes.length, 1);
-    assert.equal(result.classes[0].id, `fighter-${source.toLowerCase()}`);
-    assert.ok(result.classes[0].features.length > 0);
-    assert.ok(result.classes[0].subclasses.length > 0);
-    for (const subclass of result.classes[0].subclasses) {
-      assert.equal(subclass.bookId, normalizeBookId(subclass.bookId));
+    const cls = result.classes[0];
+    assert.equal(cls.id, `veilleur-de-papier-${source.toLowerCase()}`);
+    assert.equal(cls.ruleset, source === 'PHB' ? '2014' : '2024');
+    assert.equal(cls.features.length, 1);
+    assert.deepEqual(cls.features[0].structuredEntries, ['Le veilleur dessine un pli imaginaire sur sa carte de papier.']);
+    assert.equal(cls.subclasses.length, 1);
+    assert.equal(result.skippedSubclasses, 0);
+    const subclass = cls.subclasses[0];
+    assert.equal(subclass.bookId, source === 'PHB' ? 'PHB' : 'FRHOF');
+    assert.equal(subclass.importMetadata.originalSource, source === 'PHB' ? 'PHB' : 'FRHoF');
+    assert.equal(subclass.features.length, 1);
+    assert.equal(subclass.features[0].bookId, 'PHB');
+    assert.deepEqual(subclass.features[0].structuredEntries, ['Une brume fictive prend la forme d’un origami.']);
+    if (source === 'XPHB') {
+      assert.ok(result.warnings.some(warning => warning.includes('héritées')));
+      assert.equal(subclass.importMetadata.hasUnresolvedCopy, false);
     }
   }
 });

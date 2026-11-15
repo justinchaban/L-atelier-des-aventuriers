@@ -5,6 +5,7 @@ import CharacterBuilder from '../components/character/CharacterBuilder';
 import JoinCampaign from '../components/campaign/JoinCampaign';
 import DMSettings from '../components/library/DMSettings';
 import ContentImportPanel from '../components/content/ContentImportPanel';
+import LibraryContentPanel from '../components/library/LibraryContentPanel';
 
 import {
   books,
@@ -143,8 +144,15 @@ export default function App() {
   // PERSONNAGES
   // ----------------------------------------
 
-  const [characters, setCharacters] =
-    useState<Character[]>(loadCharacters);
+  const [loadReport] = useState(loadCharacters);
+  const [characters, setCharacters] = useState<Character[]>(loadReport.characters);
+  const [saveError, setSaveError] = useState('');
+  const [recoverySnapshots, setRecoverySnapshots] = useState<string[]>(
+    () => [...new Set([
+      ...loadReport.recoveryCopies,
+      ...(loadReport.status === 'anomaly' && loadReport.originalData !== null ? [loadReport.originalData] : [])
+    ])]
+  );
 
   const [selectedId, setSelectedId] =
     useState<string | null>(null);
@@ -154,6 +162,8 @@ export default function App() {
   // ----------------------------------------
   // NAVIGATION
   // ----------------------------------------
+
+  const [libraryRefreshToken, setLibraryRefreshToken] = useState(0);
 
   const [activeSpace, setActiveSpace] =
     useState<AppSpace>('player');
@@ -233,13 +243,12 @@ export default function App() {
   function update(next: Character[]) {
     setCharacters(next);
 
-    if (!saveCharacters(next)) {
-      setMessage(
-        'Sauvegarde impossible : exportez vos données avant de quitter.'
-      );
-    } else {
-      setMessage('');
+    const result = saveCharacters(next);
+    if (result.originalData !== undefined) {
+      const original = result.originalData;
+      setRecoverySnapshots(previous => previous.includes(original) ? previous : [...previous, original]);
     }
+    setSaveError(result.success ? '' : result.error ?? 'Sauvegarde impossible.');
   }
 
   // ========================================
@@ -283,6 +292,15 @@ export default function App() {
   // ========================================
   // EXPORT DES PERSONNAGES
   // ========================================
+
+  function exportOriginalData(raw: string, index: number) {
+    const url = URL.createObjectURL(new Blob([raw], { type: 'application/json' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `personnages-recuperation-${index + 1}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
 
   function exportData() {
     const blob = new Blob(
@@ -389,6 +407,25 @@ export default function App() {
       </nav>
 
       <main>
+        {/* Les alertes de persistance restent visibles pendant la navigation. */}
+        {saveError && <p role="alert" className="warning">{saveError}</p>}
+        {(loadReport.issues.length > 0 || recoverySnapshots.length > 0) && (
+          <section className="panel" aria-label="Récupération des personnages">
+            <h2>Sauvegarde des personnages : récupération</h2>
+            {loadReport.issues.length > 0 && (
+              <>
+                <p role="alert">Des données nécessitent votre attention. Les entrées non exploitables restent dans les données originales ; seules les entrées exploitables sont proposées à la modification.</p>
+                <ul>{loadReport.issues.map((issue, index) => <li key={index}>{issue}</li>)}</ul>
+              </>
+            )}
+            <p>Aucune réparation n'est enregistrée au chargement. Avant de remplacer une sauvegarde présentant une anomalie, une copie originale doit être conservée et vérifiée.</p>
+            {recoverySnapshots.map((raw, index) => (
+              <button key={index} type="button" onClick={() => exportOriginalData(raw, index)}>
+                Exporter les données originales — copie {index + 1}
+              </button>
+            ))}
+          </section>
+        )}
         {/* MESSAGES */}
         {message && (
           <p
@@ -542,7 +579,9 @@ export default function App() {
               </div>
             </section>
 
-            <ContentImportPanel />
+            <LibraryContentPanel refreshToken={libraryRefreshToken} />
+
+            <ContentImportPanel onImported={() => setLibraryRefreshToken(value => value + 1)} />
           </>
         )}
       </main>

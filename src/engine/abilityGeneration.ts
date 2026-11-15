@@ -39,9 +39,15 @@ export function getPointBuyCost(
   return POINT_BUY_COSTS[score] ?? -1;
 }
 
+function hasSixAbilities(scores: AbilityScores): boolean {
+  return Object.keys(scores).length === 6 &&
+    ['str', 'dex', 'con', 'int', 'wis', 'cha'].every(key => Object.hasOwn(scores, key) && Number.isInteger(scores[key as Ability]));
+}
+
 export function getPointBuyTotal(
   scores: AbilityScores
 ): number {
+  if (!hasSixAbilities(scores)) return -1;
   let total = 0;
 
   for (const score of Object.values(scores)) {
@@ -71,6 +77,7 @@ export function isValidPointBuy(
 export function isValidStandardArray(
   scores: AbilityScores
 ): boolean {
+  if (!hasSixAbilities(scores)) return false;
   const values = Object.values(scores).sort(
     (a, b) => a - b
   );

@@ -8,6 +8,7 @@ export interface Character {
   speciesId: string;
   classId: string;
   backgroundId: string;
+  /** Scores de base : 0 signifie non attribué dans un brouillon (stockage : 0 à 30). */
   abilities: AbilityScores;
   choices: Record<string, string | string[]>;
   gameState: { currentHP: number; temporaryHP: number; usedHitDice: number; usedSpellSlots: Record<number, number>; conditions: string[] };

@@ -1,11 +1,8 @@
 import { normalizeBookId } from '../../data/books';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { LibraryImportSession, canSaveLibraryImport, summarizeImportPlan } from '../../services/libraryImportSession';
 import type { ChangeEvent } from 'react';
-
-import {
-  readContentFile
-} from '../../engine/contentImporter';
 
 import type {
   ContentParseResult,
@@ -36,6 +33,9 @@ import EntryRenderer from './EntryRenderer';
 
 interface Props {
   sourceId?: string;
+  onImported?: () => void;
+  /** Injection optionnelle pour les tests du parcours sans dépendance au navigateur. */
+  session?: LibraryImportSession;
 }
 
 type FeatureTypeFilter =
@@ -253,19 +253,21 @@ function FeatureList({
 // ==========================================
 
 export default function ContentImportPanel({
-  sourceId = 'local-import'
+  sourceId = 'local-import',
+  onImported,
+  session: providedSession
 }: Props) {
   const fileInputRef =
     useRef<HTMLInputElement>(null);
 
-  const [result, setResult] =
-    useState<ContentParseResult | null>(null);
-
-  const [loading, setLoading] =
-    useState(false);
-
-  const [fileError, setFileError] =
-    useState('');
+  const [session] = useState(() => providedSession ?? new LibraryImportSession());
+  const importState = useSyncExternalStore(session.subscribe, session.getSnapshot, session.getSnapshot);
+  useEffect(() => () => session.close(), [session]);
+  const result = importState.analysis;
+  const loading = importState.phase === 'reading' || importState.phase === 'preparing';
+  const saving = importState.phase === 'saving';
+  const plan = importState.plan;
+  const counts = plan ? summarizeImportPlan(plan) : null;
 
   // ========================================
   // PRÉVISUALISATION DES CLASSES
@@ -299,59 +301,24 @@ export default function ContentImportPanel({
   async function handleFileChange(
     event: ChangeEvent<HTMLInputElement>
   ) {
-    const file = event.target.files?.[0];
-
-    if (!file) {
-      return;
-    }
-
-    setResult(null);
+    const control = event.currentTarget;
+    const file = control.files?.[0];
+    if (!file || loading || saving) return;
     setClassPreview(null);
-    setFileError('');
-
-    setBookFilter('all');
-    setTypeFilter('all');
-    setStatusFilter('all');
-
-    if (
-      !file.name.toLowerCase().endsWith('.json')
-    ) {
-      setFileError(
-        'Veuillez sélectionner un fichier JSON.'
-      );
-
-      event.target.value = '';
-      return;
+    setBookFilter('all'); setTypeFilter('all'); setStatusFilter('all');
+    const analysis = await session.selectFile(file, sourceId);
+    if (analysis) {
+      const sources = getClassSources(analysis);
+      setSelectedClassSource(sources.includes('XPHB') ? 'XPHB' : sources[0] ?? 'XPHB');
     }
-
-    setLoading(true);
-
-    try {
-      const analysis = await readContentFile(
-        file,
-        sourceId
-      );
-
-      setResult(analysis);
-
-      const sources = getClassSources(
-        analysis
-      );
-
-      setSelectedClassSource(
-        sources.includes('XPHB')
-          ? 'XPHB'
-          : sources[0] ?? 'XPHB'
-      );
-    } catch {
-      setFileError(
-        "Une erreur est survenue pendant l'analyse."
-      );
-    } finally {
-      setLoading(false);
-      event.target.value = '';
-    }
+    control.value = '';
   }
+
+  async function handleSave() {
+    const outcome = await session.save();
+    if (outcome?.success) onImported?.();
+  }
+
 
   // ========================================
   // SÉLECTEUR DE FICHIER
@@ -477,6 +444,7 @@ export default function ContentImportPanel({
           type="file"
           accept=".json,application/json"
           onChange={handleFileChange}
+          disabled={loading || saving}
           style={{ display: 'none' }}
           aria-label="Sélectionner un fichier JSON"
         />
@@ -485,7 +453,7 @@ export default function ContentImportPanel({
           type="button"
           className="primary"
           onClick={openFileSelector}
-          disabled={loading}
+          disabled={loading || saving}
         >
           {loading
             ? 'Analyse en cours...'
@@ -494,10 +462,39 @@ export default function ContentImportPanel({
 
       </div>
 
-      {fileError && (
-        <p role="alert" className="warning">
-          {fileError}
-        </p>
+      {loading && <p role="status">{importState.phase === 'reading' ? 'Lecture et analyse du fichier…' : 'Préparation du plan d’import…'}</p>}
+      {importState.message && <p role={importState.phase === 'success' ? 'status' : 'alert'} className={importState.phase === 'success' ? '' : 'warning'}>{importState.message}</p>}
+      {result?.success && <button type="button" disabled={loading || saving} onClick={() => { void session.reanalyze(); }}>Réanalyser le fichier</button>}
+
+      {plan && counts && (
+        <section className="library-import-confirmation" aria-labelledby="library-import-confirm-title" aria-busy={saving}>
+          <h3 id="library-import-confirm-title">Confirmer l’enregistrement</h3>
+          <p>{counts.created} nouveau(x) · {counts.unchanged} identique(s) · {counts.updated} modifié(s) · {counts.conflicts} conflit(s)</p>
+          {plan.alreadyImported && <p>Ce fichier a déjà été importé. Ses contenus ne seront pas dupliqués.</p>}
+          {!plan.alreadyImported && counts.unchanged > 0 && <p>Les contenus identiques sont déjà enregistrés et ne seront pas dupliqués.</p>}
+          <p className="muted">Aucun enregistrement n’est effectué avant votre confirmation. Le fichier original et sa provenance seront conservés sur ce navigateur.</p>
+          {counts.unidentified > 0 && <p className="warning">{counts.unidentified} entrée(s) sans identité suffisante : elles seront conservées dans le fichier original, sans devenir des contenus sélectionnables.</p>}
+          {counts.conflicts > 0 && <div role="alert" className="warning">
+            <p>Des définitions contradictoires bloquent l’enregistrement du fichier entier. Corrigez le fichier puis sélectionnez-le à nouveau.</p>
+            <ul>{plan.decisions.flatMap((decision, index) => decision.kind === 'conflict' ? <li key={index}>{decision.identity.normalizedName} · {decision.identity.bookId} : {decision.issues.join(' ')}</li> : [])}</ul>
+          </div>}
+          {counts.updated > 0 && <fieldset disabled={saving || importState.phase === 'stale' || importState.phase === 'success'}>
+            <legend>Autoriser explicitement les mises à jour</legend>
+            <p>Chaque case autorise le remplacement de la révision active du contenu indiqué. Les anciennes révisions seront conservées. Sans accord pour toutes les modifications, le lot entier reste non enregistré.</p>
+            {plan.decisions.flatMap(decision => decision.kind === 'update' ? (
+              <label className="library-import-approval" key={decision.identity.id}>
+                <input type="checkbox" checked={importState.acceptedUpdates.includes(decision.identity.id)} onChange={event => session.acceptUpdate(decision.identity.id, event.target.checked)} />
+                J’autorise la mise à jour de {plan.items.find(item => item.identity.id === decision.identity.id)?.revision.origins[0]?.originalName ?? decision.identity.normalizedName} ({decision.identity.bookId}).
+              </label>
+            ) : [])}
+          </fieldset>}
+          {plan.issues.length > 0 && <details><summary>Diagnostics du plan d’import ({plan.issues.length})</summary><ul>{plan.issues.map((issue, index) => <li key={index}>{issue}</li>)}</ul></details>}
+          {importState.outcome && !importState.outcome.success && <details><summary>Détails de l’échec</summary><ul>{importState.outcome.issues.map((issue, index) => <li key={index}>{issue}</li>)}</ul></details>}
+          <button type="button" className="primary" disabled={!canSaveLibraryImport(importState)} onClick={() => { void handleSave(); }}>
+            {saving ? 'Enregistrement en cours…' : 'Enregistrer dans la bibliothèque'}
+          </button>
+          {saving && <p role="status">Enregistrement en cours. Le succès sera confirmé à la fin de la transaction.</p>}
+        </section>
       )}
 
       {/* ====================================
@@ -893,7 +890,7 @@ export default function ContentImportPanel({
 
               <p className="muted">
                 Convertir les classes détectées
-                sans les ajouter à la bibliothèque.
+                sans les enregistrer automatiquement dans la bibliothèque.
                 Les sous-classes utilisant _copy
                 sont reconstruites lorsque leurs
                 références sont disponibles et
@@ -1185,11 +1182,7 @@ export default function ContentImportPanel({
                     </div>
                   )}
 
-                  <p className="muted">
-                    Prévisualisation uniquement :
-                    aucune classe n'a été enregistrée
-                    dans la bibliothèque.
-                  </p>
+                  <p className="muted">Cette prévisualisation ne déclenche aucun enregistrement. La confirmation est disponible dans le plan d’import.</p>
 
                 </div>
               )}
@@ -1254,9 +1247,9 @@ export default function ContentImportPanel({
 
           {result.success && (
             <p className="muted">
-              Les données ont été analysées,
-              mais aucun contenu n'a encore été
-              intégré à la bibliothèque.
+              {importState.phase === 'success'
+                ? 'Le fichier a été enregistré dans la bibliothèque. Le créateur n’utilise pas encore les contenus importés.'
+                : 'Les données sont analysées. Aucun contenu de ce fichier ne sera enregistré sans confirmation explicite.'}
             </p>
           )}
 
