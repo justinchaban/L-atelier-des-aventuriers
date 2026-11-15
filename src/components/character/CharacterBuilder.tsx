@@ -1,6 +1,6 @@
 import ClassSelector from './ClassSelector';
 import { useState } from 'react';
-
+import { validateWeaponMasteries } from '../../engine/weaponMastery';
 import type { Character } from '../../models/Character';
 import type { Campaign } from '../../models/Campaign';
 
@@ -89,26 +89,51 @@ export default function CharacterBuilder({
                 />
               </label>
 
-              <label>
-                Niveau
-                <input
-                  type="number"
-                  min="1"
-                  max="20"
-                  value={character.level}
-                  onChange={event => {
-                    const level = Number(event.target.value);
 
-                    if (
-                      Number.isInteger(level) &&
-                      level >= 1 &&
-                      level <= 20
-                    ) {
-                      onChange({ level });
-                    }
-                  }}
-                />
-              </label>
+<label>
+  Niveau
+  <input
+    type="number"
+    min="1"
+    max="20"
+    value={character.level}
+    onChange={event => {
+      const level = Number(event.target.value);
+
+      if (
+        !Number.isInteger(level) ||
+        level < 1 ||
+        level > 20
+      ) {
+        return;
+      }
+
+      const currentMasteries =
+        Array.isArray(character.choices.weaponMasteries)
+          ? character.choices.weaponMasteries.filter(
+              (id): id is string =>
+                typeof id === 'string'
+            )
+          : [];
+
+      const validMasteries = validateWeaponMasteries(
+        character.classId,
+        level,
+        currentMasteries,
+        campaign?.allowedBooks ?? ['srd-5.2.1']
+      );
+
+      onChange({
+        level,
+        choices: {
+          ...character.choices,
+          weaponMasteries: validMasteries
+        }
+      });
+    }}
+  />
+</label>
+
             </div>
           </>
         )}
@@ -131,13 +156,100 @@ export default function CharacterBuilder({
 
         
 {step === 2 && (
-  <ClassSelector
-    selectedId={character.classId}
-    allowedBooks={
-      campaign?.allowedBooks ?? ['srd-5.2.1']
+<ClassSelector
+  selectedId={character.classId}
+  allowedBooks={
+    campaign?.allowedBooks ?? ['srd-5.2.1']
+  }
+  characterLevel={character.level}
+
+  selectedSubclassId={
+    typeof character.choices.subclassId === 'string'
+      ? character.choices.subclassId
+      : ''
+  }
+
+  selectedSkills={
+    Array.isArray(character.choices.classSkills)
+      ? character.choices.classSkills.filter(
+          (skill): skill is string =>
+            typeof skill === 'string'
+        )
+      : []
+  }
+
+  selectedFightingStyles={
+    Array.isArray(character.choices.fightingStyles)
+      ? character.choices.fightingStyles.filter(
+          (style): style is string =>
+            typeof style === 'string'
+        )
+      : []
+  }
+
+  
+selectedWeaponMasteries={
+  Array.isArray(character.choices.weaponMasteries)
+    ? character.choices.weaponMasteries.filter(
+        (id): id is string =>
+          typeof id === 'string'
+      )
+    : []
+}
+onWeaponMasteriesChange={weaponIds =>
+  onChange({
+    choices: {
+      ...character.choices,
+      weaponMasteries: weaponIds
     }
-    onChange={classId => onChange({ classId })}
-  />
+  })
+}
+
+
+  onChange={classId =>
+    onChange({
+      classId,
+      choices:
+        classId === character.classId
+          ? character.choices
+          : {
+              ...character.choices,
+              subclassId: '',
+              classSkills: [],
+              fightingStyles: [],
+              weaponMasteries: []
+            }
+    })
+  }
+
+  onSubclassChange={subclassId =>
+    onChange({
+      choices: {
+        ...character.choices,
+        subclassId
+      }
+    })
+  }
+
+  onSkillsChange={skills =>
+    onChange({
+      choices: {
+        ...character.choices,
+        classSkills: skills
+      }
+    })
+  }
+
+  onFightingStylesChange={styles =>
+    onChange({
+      choices: {
+        ...character.choices,
+        fightingStyles: styles
+      }
+    })
+  }
+/>
+
 )}
 
 {step >= 3 && step <= 5 && (

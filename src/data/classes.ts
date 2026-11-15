@@ -154,9 +154,241 @@ export const classes: CharacterClass[] = [
       { type: 'weapon', id: 'simple' },
       { type: 'weapon', id: 'martial' }
     ],
-    features: [],
+
+skillChoices: {
+  id: 'fighter-skills',
+  name: 'Compétences du Guerrier',
+  description:
+    'Choisissez deux compétences parmi celles proposées.',
+  count: 2,
+  options: [
+    { id: 'acrobatics', name: 'Acrobaties' },
+    { id: 'animal-handling', name: 'Dressage' },
+    { id: 'athletics', name: 'Athlétisme' },
+    { id: 'history', name: 'Histoire' },
+    { id: 'insight', name: 'Perspicacité' },
+    { id: 'intimidation', name: 'Intimidation' },
+    { id: 'perception', name: 'Perception' },
+    { id: 'survival', name: 'Survie' }
+  ]
+},
+
+features: [
+  {
+    id: 'fighter-fighting-style',
+    name: 'Style de combat',
+    levelRequired: 1,
+    description:
+      'Vous obtenez un don de Style de combat parmi ceux auxquels vous êtes éligible.'
+  },
+  {
+    id: 'fighter-second-wind',
+    name: 'Second souffle',
+    levelRequired: 1,
+    description:
+      'Vous disposez de réserves d’endurance permettant de récupérer des points de vie grâce à une action bonus.'
+  },
+  {
+    id: 'fighter-weapon-mastery',
+    name: 'Maîtrise des armes',
+    levelRequired: 1,
+    description:
+      'Vous pouvez utiliser les propriétés de maîtrise des armes que vous avez choisies.'
+  },
+  {
+    id: 'fighter-action-surge',
+    name: 'Fougue',
+    levelRequired: 2,
+    description:
+      'Vous pouvez effectuer une action supplémentaire pendant votre tour, à l’exception de l’action Magie.'
+  },
+  {
+    id: 'fighter-tactical-mind',
+    name: 'Sens tactique',
+    levelRequired: 2,
+    description:
+      'Lorsque vous échouez à un test de caractéristique, vous pouvez dépenser une utilisation de Second souffle pour tenter de réussir grâce à un bonus de 1d10.'
+  },
+  {
+    id: 'fighter-asi-4',
+    name: 'Amélioration de caractéristique',
+    levelRequired: 4,
+    description:
+      'Vous obtenez le don Amélioration de caractéristique ou un autre don auquel vous êtes éligible.'
+  },
+  {
+    id: 'fighter-tactical-shift',
+    name: 'Décalage tactique',
+    levelRequired: 5,
+    description:
+      'Lorsque vous utilisez Second souffle, vous pouvez vous déplacer sans provoquer d’attaques d’opportunité.'
+  },
+  {
+    id: 'fighter-extra-attack',
+    name: 'Attaque supplémentaire',
+    levelRequired: 5,
+    description:
+      'Vous pouvez attaquer deux fois au lieu d’une lorsque vous entreprenez l’action Attaquer.'
+  },
+  {
+    id: 'fighter-asi-6',
+    name: 'Amélioration de caractéristique',
+    levelRequired: 6,
+    description:
+      'Vous obtenez un nouveau don auquel vous êtes éligible.'
+  },
+  {
+    id: 'fighter-asi-8',
+    name: 'Amélioration de caractéristique',
+    levelRequired: 8,
+    description:
+      'Vous obtenez un nouveau don auquel vous êtes éligible.'
+  },
+  {
+    id: 'fighter-indomitable',
+    name: 'Inflexible',
+    levelRequired: 9,
+    description:
+      'Si vous échouez à un jet de sauvegarde, vous pouvez le relancer avec un bonus égal à votre niveau de guerrier. Vous devez utiliser le nouveau jet et vous ne pouvez plus utiliser cette capacité avant d’avoir terminé un Repos long.'
+  },
+  {
+    id: 'fighter-tactical-master',
+    name: 'Botte tactique',
+    levelRequired: 9,
+    description:
+      'Vous pouvez remplacer la propriété de maîtrise d’une attaque par Poussée, Sape ou Ralentissement lorsque les conditions sont remplies.'
+  },
+  {
+    id: 'fighter-two-extra-attacks',
+    name: 'Double attaque supplémentaire',
+    levelRequired: 11,
+    description:
+      'Vous pouvez attaquer trois fois lorsque vous entreprenez l’action Attaquer.'
+  },
+  {
+    id: 'fighter-asi-12',
+    name: 'Amélioration de caractéristique',
+    levelRequired: 12,
+    description:
+      'Vous obtenez un nouveau don auquel vous êtes éligible.'
+  },
+  {
+    id: 'fighter-indomitable-13',
+    name: 'Inflexible(2)',
+    levelRequired: 13,
+    description:
+      'Vous disposez de deux utilisations d’Inflexible entre deux repos longs.'
+  },
+  {
+    id: 'fighter-studied-attacks',
+    name: 'Attaques avisées',
+    levelRequired: 13,
+    description:
+      'Si vous ratez une attaque contre une créature, vous avez l’avantage à votre prochaine attaque contre elle avant la fin de votre prochain tour.'
+  },
+  {
+    id: 'fighter-asi-14',
+    name: 'Amélioration de caractéristique',
+    levelRequired: 14,
+    description:
+      'Vous obtenez un nouveau don auquel vous êtes éligible.'
+  },
+  {
+    id: 'fighter-asi-16',
+    name: 'Amélioration de caractéristique',
+    levelRequired: 16,
+    description:
+      'Vous obtenez un nouveau don auquel vous êtes éligible.'
+  },
+  {
+    id: 'fighter-action-surge-17',
+    name: 'Fougue(2)',
+    levelRequired: 17,
+    description:
+      'Vous disposez de deux utilisations de Fougue entre deux repos.'
+  },
+  {
+    id: 'fighter-indomitable-17',
+    name: 'Inflexible(3)',
+    levelRequired: 17,
+    description:
+      'Vous disposez de trois utilisations d’Inflexible entre deux repos longs.'
+  },
+  {
+    id: 'fighter-epic-boon',
+    name: 'Don épique',
+    levelRequired: 19,
+    description:
+      'Vous obtenez un don épique ou un autre don auquel vous êtes éligible.'
+  },
+  {
+    id: 'fighter-three-extra-attacks',
+    name: 'Triple attaque supplémentaire',
+    levelRequired: 20,
+    description:
+      'Vous pouvez attaquer quatre fois lorsque vous entreprenez l’action Attaquer.'
+  }
+],
+    
     subclassLevel: 3,
-    subclasses: []
+
+    subclasses: [
+      {
+        id: 'champion-2024',
+        name: 'Champion',
+        description:
+          'Un guerrier qui perfectionne ses aptitudes physiques et sa maîtrise du combat pour devenir un combattant d’exception.',
+
+        bookId: 'srd-5.2.1',
+        ruleset: '2024',
+
+        features: [
+          {
+            id: 'champion-improved-critical',
+            name: 'Critique amélioré',
+            levelRequired: 3,
+            description:
+              'Vos attaques avec des armes et vos attaques à mains nues réalisent un coup critique sur un résultat de 19 ou 20 au d20.'
+          },
+          {
+            id: 'champion-remarkable-athlete',
+            name: 'Athlète remarquable',
+            levelRequired: 3,
+            description:
+              'Vous bénéficiez de l’avantage aux tests d’initiative et d’Athlétisme. Après un coup critique, vous pouvez également vous déplacer sans provoquer d’attaques d’opportunité.'
+          },
+          {
+            id: 'champion-additional-fighting-style',
+            name: 'Style de combat supplémentaire',
+            levelRequired: 7,
+            description:
+              'Vous obtenez un don de Style de combat supplémentaire auquel vous êtes éligible.'
+          },
+          {
+            id: 'champion-heroic-warrior',
+            name: 'Guerrier héroïque',
+            levelRequired: 10,
+            description:
+              'Au début de votre tour en combat, si vous ne possédez pas d’Inspiration héroïque, vous en obtenez une.'
+          },
+          {
+            id: 'champion-superior-critical',
+            name: 'Critique supérieur',
+            levelRequired: 15,
+            description:
+              'Vos attaques avec des armes et vos attaques à mains nues réalisent désormais un coup critique sur un résultat de 18, 19 ou 20 au d20.'
+          },
+          {
+            id: 'champion-survivor',
+            name: 'Survivant',
+            levelRequired: 18,
+            description:
+              'Vous améliorez votre résistance aux blessures mortelles et récupérez des points de vie au début de vos tours lorsque vous êtes suffisamment blessé.'
+          }
+        ]
+      }
+    ]
+
   },
   {
     id: 'monk-2024',
