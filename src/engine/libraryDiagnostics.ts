@@ -86,7 +86,7 @@ export async function diagnoseLibrarySnapshot(data:LibrarySnapshot):Promise<Libr
   }
   for(const edge of safe.dependencies)inspectEdge(edge,'graphe actif');
   try{
-    for(const group of cycles(safe.dependencies.filter(edge=>edge.relation==='copy')))add('error','copy-cycle',`Cycle d’héritage _copy : ${group.map(id=>nameOf(safe,id as LibraryContentId)).join(' → ')}.`);
+    for(const group of cycles(safe.dependencies.filter(edge=>edge.relation==='copy')))add('error','copy-cycle',`Cycle d’héritage _copy : ${group.map(id=>nameOf(safe,id as LibraryContentId)).join(' → ')}.`,{contentIds:group as LibraryContentId[]});
     for(const group of cycles(safe.dependencies.filter(edge=>edge.relation!=='copy')))if(!diagnostics.some(item=>item.code==='invalid-structural-edge'&&item.contentId&&group.includes(item.contentId)))add('info','structural-cycle',`Cycle structurel propriétaire/capacité autorisé : ${group.map(id=>nameOf(safe,id as LibraryContentId)).join(' ↔ ')}.`);
     const historical=safe.revisions.flatMap(revision=>Array.isArray(revision.dependencies)?revision.dependencies.filter(edge=>edge.relation==='copy'):[]);
     for(const group of cycles(historical))add('warning','historical-copy-cycle',`Cycle possible dans l’union des révisions historiques : ${group.map(id=>nameOf(safe,id as LibraryContentId)).join(' → ')}. Les versions concernées ne sont pas nécessairement actives ensemble.`);

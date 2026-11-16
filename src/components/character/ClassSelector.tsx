@@ -1,4 +1,5 @@
-import { isBookAllowed } from '../../engine/restrictions';
+import { getAvailableCreatorClasses } from '../../engine/creatorCatalog';
+import { nativeCreatorCatalog } from '../../engine/nativeCreatorCatalog';
 import { getFightingStyleCount } from '../../engine/fightingStyles';
 import WeaponMasterySelector from './WeaponMasterySelector';
 import { fightingStyleChoice } from '../../data/fightingStyles';
@@ -7,7 +8,6 @@ import SubclassSelector from './SubclassSelector';
 import ClassProgression from './ClassProgression';
 import { useState } from 'react';
 
-import { classes } from '../../data/classes';
 import type { CharacterClass } from '../../models/Class';
 
 interface Props {
@@ -64,10 +64,7 @@ export default function ClassSelector({
   onSkillsChange,
   onFightingStylesChange
 }: Props) {
-  const availableClasses = classes.filter(
-    characterClass =>
-      isBookAllowed(characterClass.bookId, allowedBooks)
-  );
+  const availableClasses = getAvailableCreatorClasses(nativeCreatorCatalog, allowedBooks);
 
   const [previewId, setPreviewId] = useState<string | null>(null);
 

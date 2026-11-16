@@ -7,9 +7,8 @@ import type {
   StartingEquipmentOption
 } from '../../models/Equipment';
 
-import {
-  classes
-} from '../../data/classes';
+import { getCreatorClass } from '../../engine/creatorCatalog';
+import { nativeCreatorCatalog } from '../../engine/nativeCreatorCatalog';
 
 import {
   getEquipmentById
@@ -29,9 +28,7 @@ export default function StartingEquipmentSelector({
   character,
   onChange
 }: Props) {
-  const characterClass = classes.find(
-    item => item.id === character.classId
-  );
+  const characterClass = getCreatorClass(nativeCreatorCatalog, character.classId);
 
   const definition = getStartingEquipment(
     character.classId,

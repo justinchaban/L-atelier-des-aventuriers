@@ -31,6 +31,8 @@ export function asLibraryDatabaseError(error: unknown, fallback: LibraryDatabase
 }
 
 export interface LibraryDatabaseOptions {
+  /** Consultation stricte : refuse toute création ou migration de schéma. */
+  existingOnly?: boolean;
   /** Injection pour tests ; l'application utilise globalThis.indexedDB. */
   factory?: IDBFactory;
   onBlocked?: () => void;
@@ -87,8 +89,15 @@ export function validateLibraryRecord(store: LibraryStore, value: unknown): void
         string(origin.originalSource) && string(origin.bookId) && string(origin.originalKey) && isRecord(origin.location) &&
         fingerprint(origin.location.importId) && typeof origin.location.pointer === 'string' &&
         (origin.location.pointer === '' || /^(\/(?:[^~]|~[01])*)+$/.test(origin.location.pointer)));
-    if (store === 'dependencies') valid = contentId(value.ownerId) && contentId(value.targetId) &&
-      ['owner', 'feature', 'copy'].includes(String(value.relation)) && (value.revisionHash === undefined || fingerprint(value.revisionHash));
+    if (store === 'dependencies') {
+      const requireField = (condition: boolean, field: string) => {
+        if (!condition) throw new LibraryDatabaseError('invalid-data', `Dépendance invalide : ${field}.`);
+      };
+      requireField(contentId(value.ownerId), 'ownerId');
+      requireField(contentId(value.targetId), 'targetId');
+      requireField(['owner', 'feature', 'copy'].includes(String(value.relation)), 'relation');
+      requireField(value.revisionHash === undefined || fingerprint(value.revisionHash), 'revisionHash');
+    }
   }
   if (!valid) throw new LibraryDatabaseError('invalid-data', `Enregistrement invalide pour ${store}.`);
 }
@@ -154,6 +163,11 @@ export class LibraryDatabase {
   private epoch = 0;
   constructor(private readonly options: LibraryDatabaseOptions = {}) {}
 
+  /** Protection du chemin de consultation, y compris avec une instance injectée. */
+  assertExistingOnly(): void {
+    if (this.options.existingOnly !== true) throw new LibraryDatabaseError('invalid-data', 'Consultation refusée : la base injectée doit garantir existingOnly.');
+  }
+
   /** Les ouvertures simultanées de cette instance partagent la même tentative. */
   open(): Promise<void> {
     if (this.connection) return Promise.resolve();
@@ -174,6 +188,11 @@ export class LibraryDatabase {
         try { this.options.onBlocked?.(); } catch { /* Un observateur ne contrôle pas le cycle de vie. */ }
       };
       request.onupgradeneeded = event => {
+        if (this.options.existingOnly) {
+          migrationError = new LibraryDatabaseError('version', 'Bibliothèque absente ou migration nécessaire ; consultation sans écriture refusée.');
+          request.transaction?.abort();
+          return;
+        }
         // Une demande IndexedDB ne peut pas être annulée avant cet événement.
         if (abandoned || epoch !== this.epoch) { request.transaction?.abort(); return; }
         try { migrate(request.result, event.oldVersion); }

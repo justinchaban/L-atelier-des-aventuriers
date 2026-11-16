@@ -84,6 +84,19 @@ function payload(value: unknown): boolean {
 export function libraryBackupCounts(data: LibrarySnapshot): LibraryBackupCounts {
   return { imports:data.imports.length, contents:data.contents.length, revisions:data.revisions.length, dependencies:data.dependencies.length };
 }
+
+/** Validation de cache réutilisable en consultation ; ne certifie aucune mécanique. */
+export function validateLibraryConversion(value: unknown, category: string, contentId: string, revisionHash: string): void {
+  requireValue(record(value) && value.recordVersion === 1 && value.contentId === contentId && value.revisionHash === revisionHash, 'Conversion incohérente.');
+  const conversion = value as Record<string, unknown>;
+  requireValue(record(conversion.converter) && string(conversion.converter.id) && conversion.converter.id.trim() && string(conversion.converter.version) && conversion.converter.version.trim(), 'Convertisseur invalide.');
+  requireValue(Array.isArray(conversion.dependencies), 'Dépendances de conversion invalides.');
+  for (const edge of conversion.dependencies as unknown[]) validateLibraryRecord('dependencies', edge);
+  requireValue(record(conversion.result), 'Résultat invalide.');
+  const result = conversion.result as Record<string, unknown>;
+  if (result.status === 'converted') requireValue(strings(result.warnings) && payload(result.payload) && record(result.payload) && result.payload.category === category, 'Données converties invalides.');
+  else requireValue(['unresolved', 'unsupported', 'failed'].includes(String(result.status)) && strings(result.issues), 'État de conversion invalide.');
+}
 /** Trie seulement les collections des magasins ; l'ordre interne des tableaux est préservé. */
 export function canonicalLibrarySnapshot(data: LibrarySnapshot): LibrarySnapshot {
   const sorted = <T>(items: T[]): T[] => [...items].sort((a,b)=> {

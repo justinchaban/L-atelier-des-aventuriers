@@ -4,6 +4,7 @@ export interface LibraryDiagnostic {
   severity:'error'|'warning'|'info';
   code:string;
   message:string;
+  contentIds?:LibraryContentId[];
   contentId?:LibraryContentId;
   revisionHash?:LibraryFingerprint;
   importId?:LibraryFingerprint;

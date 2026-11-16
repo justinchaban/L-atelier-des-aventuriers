@@ -13,7 +13,8 @@ import type {
 } from '../../engine/backgroundAbilities';
 
 import { getBackgroundOriginFeat } from '../../engine/feats';
-import { classes } from '../../data/classes';
+import { getCreatorClass } from '../../engine/creatorCatalog';
+import { nativeCreatorCatalog } from '../../engine/nativeCreatorCatalog';
 
 import {
   cleanSubclassChoices,
@@ -330,9 +331,7 @@ export default function CharacterBuilder({
       fightingStyles: validFightingStyles
     };
 
-    const characterClass = classes.find(
-      item => item.id === character.classId
-    );
+    const characterClass = getCreatorClass(nativeCreatorCatalog, character.classId);
 
     const validatedChoices = characterClass
       ? validateFeatureChoices(
@@ -354,9 +353,7 @@ export default function CharacterBuilder({
       return;
     }
 
-    const characterClass = classes.find(
-      item => item.id === classId
-    );
+    const characterClass = getCreatorClass(nativeCreatorCatalog, classId);
 
     const resetChoices: Character['choices'] = {
       ...character.choices,
@@ -383,9 +380,7 @@ export default function CharacterBuilder({
   }
 
   function handleSubclassChange(subclassId: string) {
-    const characterClass = classes.find(
-      item => item.id === character.classId
-    );
+    const characterClass = getCreatorClass(nativeCreatorCatalog, character.classId);
 
     if (!characterClass) {
       return;
