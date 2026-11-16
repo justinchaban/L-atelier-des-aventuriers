@@ -1078,3 +1078,9 @@ footer {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+
+.imported-creator-catalog { margin-top: 24px; overflow-wrap: anywhere; }
+.imported-creator-catalog details { border-top: 1px solid var(--border, #444); padding: 12px 0; }
+.imported-creator-catalog summary { cursor: pointer; }
+.imported-creator-catalog dt { font-weight: 600; }
+.imported-creator-catalog dd { margin: 0 0 10px; }

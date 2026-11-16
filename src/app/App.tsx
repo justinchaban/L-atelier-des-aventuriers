@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from 'react';
 
-import CharacterBuilder from '../components/character/CharacterBuilder';
+import CharacterBuilderWorkspace from '../components/character/CharacterBuilderWorkspace';
 import JoinCampaign from '../components/campaign/JoinCampaign';
 import DMSettings from '../components/library/DMSettings';
 import ContentImportPanel from '../components/content/ContentImportPanel';
@@ -517,7 +517,7 @@ export default function App() {
                 </button>
               </section>
             ) : (
-              <CharacterBuilder
+              <CharacterBuilderWorkspace
                 character={current}
                 campaign={joinedCampaign}
                 onChange={patch}
